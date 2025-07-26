@@ -1,0 +1,8 @@
+MONGO_URI=mongodb://62.171.174.152:27018/volt?username=98xXlLdyb66ekZwLUi4wgs80Gm1B6Bln&password=Ztkth0pbhC7yroHGYC5IRZVzXCsZTC6Z
+REDIS_URI=redis://62.171.174.152:6387
+REDIS_PASSWORD=Tv6gBhP8fXq7WJsNrD9y4YkZmLc3VuKx
+JWT_SECRET=your-super-secret-key-change-this-in-production
+PORT=8080
+CORS_ORIGIN=http://localhost:5173
+WS_ORIGIN=ws://localhost:8080
+GIN_MODE=debug

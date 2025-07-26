@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(go mod:*)",
+      "Bash(npm create:*)",
+      "Bash(npx create-svelte:*)",
+      "Bash(npx sv create:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(mv:*)",
+      "Bash(true)",
+      "Bash(rm:*)",
+      "Bash(pnpm install:*)",
+      "Bash(cp:*)",
+      "Bash(go run:*)",
+      "Bash(pnpm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(make:*)",
+      "Bash(pnpm run:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Bash(go install:*)",
+      "Bash(git add:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git rm:*)",
+      "Bash(ls:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote:*)"
+    ],
+    "deny": []
+  }
+}

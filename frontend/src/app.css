@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global CSS Variables */
+:root {
+  --electric-blue: #2563EB;
+  --deep-blue: #1E40AF;
+  --lightning-yellow: #FBBF24;
+  --light-gray: #F8FAFC;
+  --dark-slate: #0F172A;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--light-gray);
+  color: var(--dark-slate);
+  line-height: 1.6;
+}
+
+/* Electric Gradient Utility */
+.electric-gradient {
+  background: linear-gradient(135deg, var(--electric-blue), var(--deep-blue));
+}
+
+.bg-clip-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+/* Custom Components */
+@layer components {
+  .btn-primary {
+    @apply electric-gradient text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors;
+  }
+  
+  .input-field {
+    @apply appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+  
+  .method-badge-get {
+    @apply bg-green-100 text-green-800 text-xs font-mono px-2 py-1 rounded;
+  }
+  
+  .method-badge-post {
+    @apply bg-blue-100 text-blue-800 text-xs font-mono px-2 py-1 rounded;
+  }
+  
+  .method-badge-put {
+    @apply bg-yellow-100 text-yellow-800 text-xs font-mono px-2 py-1 rounded;
+  }
+  
+  .method-badge-delete {
+    @apply bg-red-100 text-red-800 text-xs font-mono px-2 py-1 rounded;
+  }
+  
+  .status-success {
+    @apply bg-green-100 text-green-800 text-xs font-mono px-2 py-1 rounded;
+  }
+  
+  .status-error {
+    @apply bg-red-100 text-red-800 text-xs font-mono px-2 py-1 rounded;
+  }
+  
+  .status-warning {
+    @apply bg-yellow-100 text-yellow-800 text-xs font-mono px-2 py-1 rounded;
+  }
+  
+  .password-toggle {
+    @apply absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer;
+  }
+  
+  .password-toggle svg {
+    @apply h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors;
+  }
+}
+
+/* Loading Animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Focus styles */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--electric-blue);
+  outline-offset: 2px;
+}
+
+/* Transition utilities */
+.transition-all {
+  transition: all 0.15s ease-in-out;
+}
+
+.transition-colors {
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.transition-opacity {
+  transition: opacity 0.15s ease-in-out;
+}

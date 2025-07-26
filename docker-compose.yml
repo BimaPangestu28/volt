@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:6.0
+    container_name: volt-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: volt
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - volt-network
+
+  # Redis (for caching and sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: volt-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - volt-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: volt-backend
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://62.171.174.152:27018/volt?username=98xXlLdyb66ekZwLUi4wgs80Gm1B6Bln&password=Ztkth0pbhC7yroHGYC5IRZVzXCsZTC6Z
+      REDIS_URI: redis://62.171.174.152:6387
+      REDIS_PASSWORD: Tv6gBhP8fXq7WJsNrD9y4YkZmLc3VuKx
+      JWT_SECRET: volt-super-secret-jwt-key-2024-electric-blue-api
+      PORT: 8080
+      CORS_ORIGIN: http://localhost:5173
+      WS_ORIGIN: ws://localhost:8080
+      GIN_MODE: release
+    ports:
+      - "8080:8080"
+    networks:
+      - volt-network
+    volumes:
+      - ./backend:/app
+    command: ["go", "run", "cmd/server/main.go"]
+
+  # Frontend (for production builds)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: volt-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:8080
+      VITE_WS_URL: ws://localhost:8080
+      VITE_APP_NAME: Volt
+      VITE_BRAND_COLOR: "#2563EB"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - volt-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  volt-network:
+    driver: bridge

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" class="%sveltekit.theme%">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Volt - API Client</title>
+		<style>
+			:root {
+				--electric-blue: #2563EB;
+				--deep-blue: #1E40AF;
+				--lightning-yellow: #FBBF24;
+				--light-gray: #F8FAFC;
+				--dark-slate: #0F172A;
+				--success: #10B981;
+				--warning: #F59E0B;
+				--error: #EF4444;
+			}
+			
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			
+			body {
+				font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+				background-color: var(--light-gray);
+				color: var(--dark-slate);
+				line-height: 1.6;
+			}
+			
+			.electric-gradient {
+				background: linear-gradient(135deg, var(--electric-blue), var(--deep-blue));
+			}
+		</style>
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>
