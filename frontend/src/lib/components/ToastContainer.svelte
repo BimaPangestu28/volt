@@ -5,13 +5,18 @@
 	$: toasts = $toastStore;
 </script>
 
-<div class="fixed top-4 right-4 z-50 space-y-2">
-	{#each toasts as toast (toast.id)}
-		<Toast
-			type={toast.type}
-			message={toast.message}
-			duration={toast.duration}
-			on:close={() => toastStore.remove(toast.id)}
-		/>
+<div class="fixed top-6 right-6 z-50 space-y-3 pointer-events-none">
+	{#each toasts as toast, index (toast.id)}
+		<div 
+			class="pointer-events-auto"
+			style="transform: translateY({index * 4}px); z-index: {50 - index};"
+		>
+			<Toast
+				type={toast.type}
+				message={toast.message}
+				duration={toast.duration}
+				on:close={() => toastStore.remove(toast.id)}
+			/>
+		</div>
 	{/each}
 </div>

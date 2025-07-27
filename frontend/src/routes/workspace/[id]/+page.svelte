@@ -5,14 +5,22 @@
 	import { authStore } from '$lib/stores/auth';
 	import { workspaceStore } from '$lib/stores/workspace';
 	import { apiClient } from '$lib/api/client';
+	import { toastStore } from '$lib/stores/toast';
+	
+	// Components
+	import WorkspaceHeader from '$lib/components/workspace/WorkspaceHeader.svelte';
+	import CollectionsSidebar from '$lib/components/workspace/CollectionsSidebar.svelte';
+	import RequestBuilder from '$lib/components/workspace/RequestBuilder.svelte';
+	import ResponsePanel from '$lib/components/workspace/ResponsePanel.svelte';
+	import CreateCollectionModal from '$lib/components/workspace/CreateCollectionModal.svelte';
 
 	let workspaceId = '';
 	let isAuthenticated = false;
-	let currentWorkspace = null;
-	let collections = [];
-	let selectedCollection = null;
-	let selectedRequest = null;
-	let requests = [];
+	let currentWorkspace: any = null;
+	let collections: any[] = [];
+	let selectedCollection: any = null;
+	let selectedRequest: any = null;
+	let requests: any[] = [];
 	let isLoading = true;
 	let error = '';
 	
@@ -22,7 +30,7 @@
 	let requestUrl = '';
 	let requestHeaders = [{ key: '', value: '' }];
 	let requestBody = '';
-	let requestBodyType = 'json';
+	let requestBodyType = 'raw';
 	let authType = 'none';
 	let authToken = '';
 	let authUsername = '';
@@ -31,14 +39,71 @@
 	let showAuthPassword = false;
 	
 	// Response state
-	let response = null;
+	let response: any = null;
 	let isExecuting = false;
+	let activeResponseTab = 'body';
+	let activeTab = 'Body';
 
 	// UI state
 	let showNewCollectionModal = false;
 	let newCollectionName = '';
 	let newCollectionDescription = '';
 	let isCreatingCollection = false;
+
+	// Resizable divider state
+	let responseHeight = 320; // Default height in pixels
+	let isDragging = false;
+	let startY = 0;
+	let startHeight = 0;
+	
+	// Save state tracking
+	let saveCompletedCounter = 0;
+	
+	// Tab system for multiple requests
+	interface RequestTab {
+		id: string;
+		name: string;
+		method: string;
+		url: string;
+		headers: { key: string; value: string }[];
+		body: string;
+		bodyType: string;
+		authType: string;
+		authToken: string;
+		authUsername: string;
+		authPassword: string;
+		isUnsaved: boolean;
+		requestId?: string; // For saved requests
+		response?: any; // Store response for each tab
+	}
+	
+	let requestTabs: RequestTab[] = [];
+	let activeTabId: string = '';
+	let tabCounter = 1;
+	
+	// Clean up duplicate tabs
+	function cleanupTabs() {
+		// Remove duplicate tabs for same request
+		const seen = new Set();
+		requestTabs = requestTabs.filter(tab => {
+			if (tab.requestId) {
+				if (seen.has(tab.requestId)) {
+					return false; // Remove duplicate
+				}
+				seen.add(tab.requestId);
+			}
+			return true;
+		});
+		
+		// If active tab was removed, switch to first available tab
+		if (activeTabId && !requestTabs.find(t => t.id === activeTabId)) {
+			if (requestTabs.length > 0) {
+				switchToTab(requestTabs[0].id);
+			} else {
+				activeTabId = '';
+			}
+		}
+	}
 
 	// Subscribe to stores
 	authStore.subscribe(state => {
@@ -47,30 +112,50 @@
 
 	workspaceStore.subscribe(state => {
 		currentWorkspace = state.currentWorkspace;
-		collections = state.collections;
+		collections = state.collections || [];
 		isLoading = state.isLoading;
 		error = state.error || '';
+		console.log('Workspace store updated:', { collections: collections.length, isLoading, error });
 	});
 
 	// Get workspace ID from URL
 	page.subscribe(({ params }) => {
-		workspaceId = params.id;
+		workspaceId = params.id || '';
+		console.log('Workspace ID set:', workspaceId);
 	});
 
 	onMount(async () => {
-		// Wait for auth store to initialize
-		const unsubscribe = authStore.subscribe(async (state) => {
-			if (state.isAuthenticated === false && !state.user) {
+		console.log('onMount called, isAuthenticated:', isAuthenticated, 'workspaceId:', workspaceId);
+		
+		// Add window resize listener
+		window.addEventListener('resize', handleWindowResize);
+		
+		let attempts = 0;
+		const checkAndLoad = async () => {
+			attempts++;
+			console.log(`Attempt ${attempts}: auth=${isAuthenticated}, workspaceId=${workspaceId}`);
+			
+			if (!isAuthenticated && attempts > 10) {
 				goto('/login');
 				return;
 			}
 			
-			if (state.isAuthenticated && state.user && workspaceId) {
+			if (isAuthenticated && workspaceId) {
+				console.log('Both conditions met, loading data...');
 				await loadWorkspace();
 				await loadCollections();
-				unsubscribe();
+				return;
 			}
-		});
+			
+			setTimeout(checkAndLoad, 100);
+		};
+		
+		checkAndLoad();
+		
+		// Cleanup function
+		return () => {
+			window.removeEventListener('resize', handleWindowResize);
+		};
 	});
 
 	async function loadWorkspace() {
@@ -85,16 +170,39 @@
 	async function loadCollections() {
 		try {
 			console.log('Loading collections for workspace:', workspaceId);
-			workspaceStore.setLoading(true);
-			const data = await apiClient.getCollections(workspaceId);
-			console.log('Collections received:', data);
-			workspaceStore.setCollections(data);
+			
+			const cachedCollections = workspaceStore.getCachedCollections(workspaceId);
+			
+			if (cachedCollections) {
+				console.log('Using cached collections:', cachedCollections);
+				workspaceStore.setCollections(cachedCollections);
+				
+				const isStale = !workspaceStore.isCacheValid(workspaceId);
+				if (isStale) {
+					console.log('Cache is stale, refreshing in background...');
+					workspaceStore.setRefreshing(workspaceId, true);
+					
+					try {
+						const freshData = await apiClient.getCollections(workspaceId);
+						console.log('Background refresh completed:', freshData);
+						workspaceStore.setCachedCollections(workspaceId, freshData);
+					} catch (refreshErr: any) {
+						console.error('Background refresh failed:', refreshErr);
+					} finally {
+						workspaceStore.setRefreshing(workspaceId, false);
+					}
+				}
+			} else {
+				workspaceStore.setLoading(true);
+				const data = await apiClient.getCollections(workspaceId);
+				console.log('Collections received:', data);
+				workspaceStore.setCachedCollections(workspaceId, data);
+				workspaceStore.setLoading(false);
+			}
 		} catch (err: any) {
 			console.error('Error loading collections:', err);
 			workspaceStore.setError(err.response?.data?.error || 'Failed to load collections');
-		} finally {
 			workspaceStore.setLoading(false);
-			console.log('Collections loading finished');
 		}
 	}
 
@@ -104,79 +212,132 @@
 		isCreatingCollection = true;
 		try {
 			const collection = await apiClient.createCollection(workspaceId, newCollectionName, newCollectionDescription);
-			workspaceStore.addCollection(collection);
+			
+			workspaceStore.setLoading(true);
+			const freshData = await apiClient.getCollections(workspaceId);
+			workspaceStore.setCachedCollections(workspaceId, freshData);
+			workspaceStore.setLoading(false);
+			
+			toastStore.success(`Collection "${newCollectionName}" created successfully!`);
 			
 			newCollectionName = '';
 			newCollectionDescription = '';
 			showNewCollectionModal = false;
 		} catch (err: any) {
-			error = err.response?.data?.error || 'Failed to create collection';
+			const errorMessage = err.response?.data?.error || 'Failed to create collection';
+			error = errorMessage;
+			toastStore.error(errorMessage);
+			workspaceStore.setLoading(false);
 		} finally {
 			isCreatingCollection = false;
 		}
 	}
 
-	async function selectCollection(collection: any) {
+	async function selectCollection(event: any) {
+		const collection = event.detail;
 		selectedCollection = collection;
 		selectedRequest = null;
 		response = null;
 		
+		// Create first tab if no tabs exist, or if current tab is from different collection
+		if (requestTabs.length === 0) {
+			createNewTab();
+		}
+		
 		try {
 			const data = await apiClient.getRequests(collection.id);
 			requests = data;
+			
+			// Clean up any duplicate tabs
+			cleanupTabs();
 		} catch (err: any) {
 			error = err.response?.data?.error || 'Failed to load requests';
 		}
 	}
 
-	function selectRequest(request: any) {
-		selectedRequest = request;
-		
-		// Populate request builder with selected request data
-		requestName = request.name;
-		requestMethod = request.method;
-		requestUrl = request.url;
-		requestBody = request.body?.content || '';
-		requestBodyType = request.body?.type || 'json';
-		authType = request.auth?.type || 'none';
-		
-		// Convert headers object to array
-		requestHeaders = Object.entries(request.headers || {}).map(([key, value]) => ({ key, value }));
-		if (requestHeaders.length === 0) {
-			requestHeaders = [{ key: '', value: '' }];
-		}
-		
-		// Set auth credentials
-		if (request.auth?.credentials) {
-			authToken = request.auth.credentials.token || '';
-			authUsername = request.auth.credentials.username || '';
-			authPassword = request.auth.credentials.password || '';
-		}
-	}
-
-	function addHeader() {
-		requestHeaders = [...requestHeaders, { key: '', value: '' }];
-	}
-
-	function removeHeader(index: number) {
-		requestHeaders = requestHeaders.filter((_, i) => i !== index);
+	function selectRequest(event: any) {
+		const request = event.detail;
+		createTabFromRequest(request);
 	}
 
 	async function executeRequest() {
-		if (!selectedRequest) {
-			await saveRequest();
+		if (!requestUrl.trim()) {
+			toastStore.error('Please enter a request URL');
+			return;
 		}
-		
-		if (!selectedRequest) return;
 
 		isExecuting = true;
 		response = null;
 		
 		try {
-			const result = await apiClient.executeRequest(selectedRequest.id);
-			response = result;
+			const headers: Record<string, string> = {};
+			requestHeaders.forEach(({ key, value }) => {
+				if (key.trim() && value.trim()) {
+					headers[key] = value;
+				}
+			});
+
+			const auth: any = {
+				type: authType,
+				credentials: {} as Record<string, string>
+			};
+
+			if (authType === 'bearer' && authToken) {
+				auth.credentials.token = authToken;
+				headers['Authorization'] = `Bearer ${authToken}`;
+			} else if (authType === 'basic' && authUsername) {
+				auth.credentials.username = authUsername;
+				auth.credentials.password = authPassword;
+				const basicAuth = btoa(`${authUsername}:${authPassword}`);
+				headers['Authorization'] = `Basic ${basicAuth}`;
+			}
+
+			const requestData = {
+				name: requestName || 'Untitled Request',
+				method: requestMethod,
+				url: requestUrl,
+				headers,
+				body: requestMethod !== 'GET' ? {
+					type: requestBodyType,
+					content: requestBody
+				} : undefined,
+				auth
+			};
+
+			const startTime = Date.now();
+			const result = await apiClient.executeRawRequest(requestData);
+			const endTime = Date.now();
+			
+			response = {
+				...result,
+				time: endTime - startTime
+			};
+			
+			// Update response in current tab
+			if (activeTabId) {
+				const tabIndex = requestTabs.findIndex(t => t.id === activeTabId);
+				if (tabIndex >= 0) {
+					requestTabs[tabIndex].response = response;
+					requestTabs = [...requestTabs];
+				}
+			}
+			
+			toastStore.success('Request executed successfully!');
 		} catch (err: any) {
-			error = err.response?.data?.error || 'Failed to execute request';
+			const errorMessage = err.response?.data?.error || err.message || 'Failed to execute request';
+			error = errorMessage;
+			toastStore.error(errorMessage);
+			
+			if (err.response) {
+				const endTime = Date.now();
+				response = {
+					status: err.response.status,
+					statusText: err.response.statusText,
+					headers: err.response.headers || {},
+					body: err.response.data || err.message,
+					time: endTime - (response?.startTime || Date.now())
+				};
+			}
 		} finally {
 			isExecuting = false;
 		}
@@ -185,16 +346,16 @@
 	async function saveRequest() {
 		if (!selectedCollection) return;
 
-		const headers = {};
+		const headers: Record<string, string> = {};
 		requestHeaders.forEach(({ key, value }) => {
 			if (key.trim() && value.trim()) {
 				headers[key] = value;
 			}
 		});
 
-		const auth = {
+		const auth: any = {
 			type: authType,
-			credentials: {}
+			credentials: {} as Record<string, string>
 		};
 
 		if (authType === 'bearer' && authToken) {
@@ -219,7 +380,6 @@
 
 		try {
 			if (selectedRequest) {
-				// Update existing request
 				await apiClient.updateRequest(selectedRequest.id, requestData);
 				const updatedRequests = requests.map(r => 
 					r.id === selectedRequest.id ? { ...r, ...requestData } : r
@@ -227,36 +387,276 @@
 				requests = updatedRequests;
 				selectedRequest = { ...selectedRequest, ...requestData };
 			} else {
-				// Create new request
 				const newRequest = await apiClient.createRequest(selectedCollection.id, requestData);
 				requests = [...requests, newRequest];
 				selectedRequest = newRequest;
 			}
+			
+			// Update tab to mark as saved and update requestId if it's a new request
+			if (activeTabId) {
+				const tabIndex = requestTabs.findIndex(t => t.id === activeTabId);
+				if (tabIndex >= 0) {
+					const updatedTab = {
+						...requestTabs[tabIndex],
+						isUnsaved: false,
+						name: requestName
+					};
+					
+					// If this was a new request that got saved, update the requestId
+					if (!requestTabs[tabIndex].requestId && selectedRequest) {
+						updatedTab.requestId = selectedRequest.id;
+					}
+					
+					requestTabs[tabIndex] = updatedTab;
+					requestTabs = [...requestTabs];
+				}
+			}
+			
+			// Increment counter to signal save completion
+			saveCompletedCounter++;
 		} catch (err: any) {
 			error = err.response?.data?.error || 'Failed to save request';
+			throw err; // Re-throw for keyboard shortcut error handling
 		}
 	}
 
-	function newRequest() {
-		selectedRequest = null;
-		requestName = 'New Request';
-		requestMethod = 'GET';
-		requestUrl = '';
-		requestHeaders = [{ key: '', value: '' }];
-		requestBody = '';
-		requestBodyType = 'json';
-		authType = 'none';
-		authToken = '';
-		authUsername = '';
-		authPassword = '';
-		response = null;
+	// Tab management functions
+	function createNewTab() {
+		const newTab: RequestTab = {
+			id: `tab-${Date.now()}-${tabCounter++}`,
+			name: `New Request ${tabCounter - 1}`,
+			method: 'GET',
+			url: '',
+			headers: [{ key: '', value: '' }],
+			body: '',
+			bodyType: 'raw',
+			authType: 'none',
+			authToken: '',
+			authUsername: '',
+			authPassword: '',
+			isUnsaved: false,
+			response: null
+		};
+		
+		requestTabs = [...requestTabs, newTab];
+		switchToTab(newTab.id);
+		return newTab;
+	}
+	
+	function createTabFromRequest(request: any) {
+		// If tab for this request already exists, switch to it
+		const existingTab = requestTabs.find(tab => tab.requestId === request.id);
+		if (existingTab) {
+			switchToTab(existingTab.id);
+			return existingTab;
+		}
+		
+		const newTab: RequestTab = {
+			id: `tab-${Date.now()}-${request.id}`,
+			name: request.name,
+			method: request.method,
+			url: request.url,
+			headers: Object.entries(request.headers || {}).map(([key, value]) => ({ key, value: String(value) })),
+			body: request.body?.content || '',
+			bodyType: request.body?.type || 'raw',
+			authType: request.auth?.type || 'none',
+			authToken: request.auth?.credentials?.token || '',
+			authUsername: request.auth?.credentials?.username || '',
+			authPassword: request.auth?.credentials?.password || '',
+			isUnsaved: false,
+			requestId: request.id,
+			response: null
+		};
+		
+		requestTabs = [...requestTabs, newTab];
+		switchToTab(newTab.id);
+		return newTab;
+	}
+	
+	function switchToTab(tabId: string) {
+		activeTabId = tabId;
+		const tab = requestTabs.find(t => t.id === tabId);
+		if (tab) {
+			// Update current form state
+			requestName = tab.name;
+			requestMethod = tab.method;
+			requestUrl = tab.url;
+			requestHeaders = tab.headers.length > 0 ? tab.headers : [{ key: '', value: '' }];
+			requestBody = tab.body;
+			requestBodyType = tab.bodyType;
+			authType = tab.authType;
+			authToken = tab.authToken;
+			authUsername = tab.authUsername;
+			authPassword = tab.authPassword;
+			response = tab.response;
+			
+			// Update selected request if it's a saved request
+			if (tab.requestId) {
+				selectedRequest = requests.find(r => r.id === tab.requestId) || null;
+			} else {
+				selectedRequest = null;
+			}
+		}
+	}
+	
+	function closeTab(tabId: string) {
+		const tabIndex = requestTabs.findIndex(t => t.id === tabId);
+		if (tabIndex === -1) return;
+		
+		const tab = requestTabs[tabIndex];
+		
+		// If tab has unsaved changes, show confirmation (simplified for now)
+		if (tab.isUnsaved) {
+			const confirm = window.confirm(`"${tab.name}" has unsaved changes. Close anyway?`);
+			if (!confirm) return;
+		}
+		
+		// Remove tab
+		requestTabs = requestTabs.filter(t => t.id !== tabId);
+		
+		// Switch to another tab or create new one
+		if (activeTabId === tabId) {
+			if (requestTabs.length > 0) {
+				// Switch to previous tab or next available tab
+				const newActiveIndex = Math.max(0, tabIndex - 1);
+				switchToTab(requestTabs[newActiveIndex].id);
+			} else {
+				// No tabs left, create a new one
+				createNewTab();
+			}
+		}
+	}
+	
+	function updateCurrentTab() {
+		if (activeTabId) {
+			const tabIndex = requestTabs.findIndex(t => t.id === activeTabId);
+			if (tabIndex >= 0) {
+				const currentTab = requestTabs[tabIndex];
+				const updatedTab = {
+					...currentTab,
+					name: requestName,
+					method: requestMethod,
+					url: requestUrl,
+					headers: requestHeaders,
+					body: requestBody,
+					bodyType: requestBodyType,
+					authType: authType,
+					authToken: authToken,
+					authUsername: authUsername,
+					authPassword: authPassword,
+					isUnsaved: true // Mark as unsaved when modified
+				};
+				
+				requestTabs[tabIndex] = updatedTab;
+				requestTabs = [...requestTabs]; // Trigger reactivity
+			}
+		}
+	}
+	
+	// Watch for changes and update current tab
+	let lastFormState = '';
+	$: {
+		const currentFormState = JSON.stringify({
+			name: requestName,
+			method: requestMethod,
+			url: requestUrl,
+			headers: requestHeaders,
+			body: requestBody,
+			bodyType: requestBodyType,
+			authType: authType,
+			authToken: authToken,
+			authUsername: authUsername,
+			authPassword: authPassword
+		});
+		
+		if (activeTabId && lastFormState && currentFormState !== lastFormState) {
+			updateCurrentTab();
+		}
+		lastFormState = currentFormState;
 	}
 
-	function formatResponseBody(body: string) {
-		try {
-			return JSON.stringify(JSON.parse(body), null, 2);
-		} catch {
-			return body;
+	function newRequest() {
+		// If we have an empty tab that's not saved, use it instead of creating new one
+		const currentTab = requestTabs.find(t => t.id === activeTabId);
+		if (currentTab && !currentTab.requestId && !currentTab.url && !currentTab.body && currentTab.name.startsWith('New Request')) {
+			// Current tab is already empty, no need to create new one
+			return;
+		}
+		
+		createNewTab();
+	}
+
+	// Resizable divider functions
+	function handleMouseDown(event: MouseEvent) {
+		isDragging = true;
+		startY = event.clientY;
+		startHeight = responseHeight;
+		
+		document.addEventListener('mousemove', handleMouseMove);
+		document.addEventListener('mouseup', handleMouseUp);
+		document.body.style.cursor = 'ns-resize';
+		document.body.style.userSelect = 'none';
+	}
+
+	function handleMouseMove(event: MouseEvent) {
+		if (!isDragging) return;
+		
+		const deltaY = startY - event.clientY; // Inverted because we want dragging up to increase height
+		const availableHeight = window.innerHeight - 120; // Account for header and some margin
+		const maxResponseHeight = Math.min(600, availableHeight * 0.7); // Max 70% of available height or 600px
+		const minResponseHeight = Math.max(200, availableHeight * 0.2); // Min 20% of available height or 200px
+		const minRequestHeight = 300; // Minimum height for request builder
+		
+		// Calculate new height ensuring request builder gets minimum space
+		const maxAllowedResponseHeight = availableHeight - minRequestHeight;
+		const newHeight = Math.max(
+			minResponseHeight, 
+			Math.min(maxResponseHeight, Math.min(maxAllowedResponseHeight, startHeight + deltaY))
+		);
+		
+		responseHeight = newHeight;
+	}
+
+	function handleMouseUp() {
+		isDragging = false;
+		document.removeEventListener('mousemove', handleMouseMove);
+		document.removeEventListener('mouseup', handleMouseUp);
+		document.body.style.cursor = '';
+		document.body.style.userSelect = '';
+	}
+
+	// Handle window resize to adjust response height limits
+	function handleWindowResize() {
+		const availableHeight = window.innerHeight - 120;
+		const maxResponseHeight = Math.min(600, availableHeight * 0.7);
+		const minResponseHeight = Math.max(200, availableHeight * 0.2);
+		const minRequestHeight = 300;
+		const maxAllowedResponseHeight = availableHeight - minRequestHeight;
+		
+		// Adjust responseHeight if it exceeds new limits
+		responseHeight = Math.max(
+			minResponseHeight, 
+			Math.min(maxResponseHeight, Math.min(maxAllowedResponseHeight, responseHeight))
+		);
+	}
+
+	// Handle keyboard shortcuts
+	async function handleKeyDown(event: KeyboardEvent) {
+		// Check for Ctrl+S (Windows/Linux) or Cmd+S (Mac)
+		if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+			event.preventDefault(); // Prevent browser's default save dialog
+			
+			// Only save if we have a selected collection
+			if (selectedCollection) {
+				try {
+					await saveRequest();
+					toastStore.success('Request saved!');
+				} catch (err) {
+					toastStore.error('Failed to save request');
+				}
+			} else {
+				toastStore.error('Please select a collection first');
+			}
 		}
 	}
 </script>
@@ -265,361 +665,183 @@
 	<title>{currentWorkspace?.name || 'Workspace'} - Volt</title>
 </svelte:head>
 
-<div class="h-screen flex flex-col bg-gray-50">
+<!-- Global keyboard shortcuts -->
+<svelte:window on:keydown={handleKeyDown} />
+
+<div class="h-screen flex flex-col bg-gray-900">
 	<!-- Header -->
-	<header class="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
-		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<div class="flex justify-between items-center h-16">
-				<div class="flex items-center space-x-4">
-					<a href="/dashboard" class="text-2xl font-bold electric-gradient bg-clip-text text-transparent">⚡ Volt</a>
-					<span class="text-gray-300">→</span>
-					<h1 class="text-lg font-medium text-gray-900">{currentWorkspace?.name || 'Loading...'}</h1>
-				</div>
-				
-				<div class="flex items-center space-x-4">
-					<button
-						on:click={() => showNewCollectionModal = true}
-						class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
-					>
-						New Collection
-					</button>
-				</div>
-			</div>
-		</div>
-	</header>
+	<WorkspaceHeader 
+		{currentWorkspace} 
+		on:createCollection={() => showNewCollectionModal = true} 
+	/>
 
 	<div class="flex-1 flex overflow-hidden">
 		<!-- Sidebar -->
-		<div class="w-80 bg-white border-r border-gray-200 flex flex-col">
-			<!-- Collections -->
-			<div class="flex-1 overflow-y-auto">
-				<div class="p-4">
-					<h2 class="text-sm font-medium text-gray-900 mb-3">Collections</h2>
-					
-					{#if isLoading}
-						<div class="flex items-center justify-center py-8">
-							<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-						</div>
-					{:else if collections.length === 0}
-						<div class="text-center py-8">
-							<p class="text-sm text-gray-500 mb-4">No collections yet</p>
-							<button
-								on:click={() => showNewCollectionModal = true}
-								class="text-sm text-blue-600 hover:text-blue-700"
-							>
-								Create your first collection
-							</button>
-						</div>
-					{:else}
-						<div class="space-y-2">
-							{#each collections as collection}
-								<div 
-									class="p-3 rounded-lg border cursor-pointer transition-colors {selectedCollection?.id === collection.id ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}"
-									on:click={() => selectCollection(collection)}
-									on:keydown={(e) => e.key === 'Enter' && selectCollection(collection)}
-									role="button"
-									tabindex="0"
-								>
-									<h3 class="font-medium text-sm text-gray-900">{collection.name}</h3>
-									{#if collection.description}
-										<p class="text-xs text-gray-500 mt-1">{collection.description}</p>
-									{/if}
-								</div>
-							{/each}
-						</div>
-					{/if}
-				</div>
-
-				<!-- Requests -->
-				{#if selectedCollection}
-					<div class="border-t border-gray-200 p-4">
-						<div class="flex items-center justify-between mb-3">
-							<h3 class="text-sm font-medium text-gray-900">Requests</h3>
-							<button
-								on:click={newRequest}
-								class="text-xs text-blue-600 hover:text-blue-700 flex items-center"
-							>
-								<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-								</svg>
-								New
-							</button>
-						</div>
-						
-						<div class="space-y-1">
-							{#each requests as request}
-								<div 
-									class="p-2 rounded cursor-pointer transition-colors flex items-center {selectedRequest?.id === request.id ? 'bg-blue-100' : 'hover:bg-gray-100'}"
-									on:click={() => selectRequest(request)}
-									on:keydown={(e) => e.key === 'Enter' && selectRequest(request)}
-									role="button"
-									tabindex="0"
-								>
-									<span class="text-xs font-mono px-1.5 py-0.5 rounded {request.method === 'GET' ? 'bg-green-100 text-green-800' : request.method === 'POST' ? 'bg-blue-100 text-blue-800' : request.method === 'PUT' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">{request.method}</span>
-									<span class="ml-2 text-sm text-gray-900 truncate">{request.name}</span>
-								</div>
-							{/each}
-						</div>
-					</div>
-				{/if}
-			</div>
-		</div>
+		<CollectionsSidebar
+			{collections}
+			{selectedCollection}
+			{selectedRequest}
+			{requests}
+			{isLoading}
+			on:selectCollection={selectCollection}
+			on:selectRequest={selectRequest}
+			on:newRequest={newRequest}
+			on:createCollection={() => showNewCollectionModal = true}
+		/>
 
 		<!-- Main Content -->
-		<div class="flex-1 flex flex-col">
+		<div class="flex-1 flex flex-col bg-gray-900 overflow-hidden relative">
 			{#if selectedCollection}
 				<!-- Request Builder -->
-				<div class="flex-1 flex">
-					<!-- Request Panel -->
-					<div class="flex-1 flex flex-col bg-white">
-						<div class="border-b border-gray-200 p-4">
-							<div class="flex items-center space-x-3">
-								<input
-									type="text"
-									bind:value={requestName}
-									placeholder="Request name"
-									class="flex-1 text-lg font-medium border-none outline-none bg-transparent"
-								/>
-								<button
-									on:click={saveRequest}
-									class="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded transition-colors"
-								>
-									Save
-								</button>
-								<button
-									on:click={executeRequest}
-									disabled={isExecuting}
-									class="electric-gradient text-white px-4 py-2 rounded font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center"
-								>
-									{#if isExecuting}
-										<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-											<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-											<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-										</svg>
-										Sending...
-									{:else}
-										Send
-									{/if}
-								</button>
-							</div>
-						</div>
-
-						<div class="flex-1 overflow-y-auto p-4 space-y-6">
-							<!-- URL -->
-							<div>
-								<div class="flex space-x-2">
-									<select bind:value={requestMethod} class="px-3 py-2 border border-gray-300 rounded-md text-sm font-mono">
-										<option value="GET">GET</option>
-										<option value="POST">POST</option>
-										<option value="PUT">PUT</option>
-										<option value="DELETE">DELETE</option>
-										<option value="PATCH">PATCH</option>
-									</select>
-									<input
-										type="url"
-										bind:value={requestUrl}
-										placeholder="https://api.example.com/endpoint"
-										class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-									/>
-								</div>
-							</div>
-
-							<!-- Headers -->
-							<div>
-								<h3 class="text-sm font-medium text-gray-700 mb-2">Headers</h3>
-								<div class="space-y-2">
-									{#each requestHeaders as header, index}
-										<div class="flex space-x-2">
-											<input
-												type="text"
-												bind:value={header.key}
-												placeholder="Header name"
-												class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-											/>
-											<input
-												type="text"
-												bind:value={header.value}
-												placeholder="Header value"
-												class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-											/>
-											<button
-												on:click={() => removeHeader(index)}
-												class="px-2 py-2 text-gray-400 hover:text-red-500"
-											>
-												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-												</svg>
-											</button>
-										</div>
-									{/each}
-									<button
-										on:click={addHeader}
-										class="text-sm text-blue-600 hover:text-blue-700 flex items-center"
-									>
-										<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-										</svg>
-										Add Header
-									</button>
-								</div>
-							</div>
-
-							<!-- Auth -->
-							<div>
-								<h3 class="text-sm font-medium text-gray-700 mb-2">Authentication</h3>
-								<select bind:value={authType} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mb-3">
-									<option value="none">No Auth</option>
-									<option value="bearer">Bearer Token</option>
-									<option value="basic">Basic Auth</option>
-								</select>
-								
-								{#if authType === 'bearer'}
-									<div class="relative">
-										{#if showAuthToken}
-											<input
-												type="text"
-												bind:value={authToken}
-												placeholder="Bearer token"
-												class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md text-sm"
-											/>
-										{:else}
-											<input
-												type="password"
-												bind:value={authToken}
-												placeholder="Bearer token"
-												class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md text-sm"
-											/>
-										{/if}
-										<button
-											type="button"
-											class="absolute inset-y-0 right-0 pr-3 flex items-center"
-											on:click={() => showAuthToken = !showAuthToken}
-										>
-											{#if showAuthToken}
-												<!-- Eye slash icon (hide) -->
-												<svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M14.12 14.12l1.415 1.415M14.12 14.12L9.878 9.878m4.242 4.242L8.464 8.464m5.656 5.656l1.415 1.415"></path>
-												</svg>
-											{:else}
-												<!-- Eye icon (show) -->
-												<svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-												</svg>
-											{/if}
-										</button>
-									</div>
-								{:else if authType === 'basic'}
-									<div class="space-y-2">
-										<input
-											type="text"
-											bind:value={authUsername}
-											placeholder="Username"
-											class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-										/>
-										<div class="relative">
-											{#if showAuthPassword}
-												<input
-													type="text"
-													bind:value={authPassword}
-													placeholder="Password"
-													class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md text-sm"
-												/>
-											{:else}
-												<input
-													type="password"
-													bind:value={authPassword}
-													placeholder="Password"
-													class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md text-sm"
-												/>
-											{/if}
-											<button
-												type="button"
-												class="absolute inset-y-0 right-0 pr-3 flex items-center"
-												on:click={() => showAuthPassword = !showAuthPassword}
-											>
-												{#if showAuthPassword}
-													<!-- Eye slash icon (hide) -->
-													<svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M14.12 14.12l1.415 1.415M14.12 14.12L9.878 9.878m4.242 4.242L8.464 8.464m5.656 5.656l1.415 1.415"></path>
-													</svg>
-												{:else}
-													<!-- Eye icon (show) -->
-													<svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-													</svg>
-												{/if}
-											</button>
-										</div>
-									</div>
-								{/if}
-							</div>
-
-							<!-- Body -->
-							{#if requestMethod !== 'GET'}
-								<div>
-									<h3 class="text-sm font-medium text-gray-700 mb-2">Body</h3>
-									<select bind:value={requestBodyType} class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mb-3">
-										<option value="json">JSON</option>
-										<option value="form">Form Data</option>
-										<option value="raw">Raw</option>
-									</select>
-									<textarea
-										bind:value={requestBody}
-										placeholder={requestBodyType === 'json' ? '{\n  "key": "value"\n}' : 'Request body...'}
-										rows="8"
-										class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono"
-									></textarea>
-								</div>
-							{/if}
+				<div 
+					class="overflow-hidden bg-gray-900" 
+					style="height: calc(100vh - 64px - {response || isExecuting ? responseHeight + 4 : 0}px); min-height: 300px;"
+				>
+					<RequestBuilder
+						{selectedRequest}
+						bind:requestName
+						bind:requestMethod
+						bind:requestUrl
+						bind:requestHeaders
+						bind:requestBody
+						bind:requestBodyType
+						bind:authType
+						bind:authToken
+						bind:authUsername
+						bind:authPassword
+						bind:showAuthToken
+						bind:showAuthPassword
+						bind:activeTab
+						{isExecuting}
+						{saveCompletedCounter}
+						on:executeRequest={executeRequest}
+						on:saveRequest={saveRequest}
+					/>
+				</div>
+				
+				{#if response || isExecuting}
+					<!-- Resizable Divider -->
+					<div 
+						class="h-1 bg-gray-700 hover:bg-blue-500 cursor-ns-resize transition-colors relative group flex-shrink-0"
+						on:mousedown={handleMouseDown}
+						role="separator"
+						tabindex="0"
+					>
+						<!-- Drag Handle Visual -->
+						<div class="absolute inset-x-0 top-1/2 transform -translate-y-1/2 flex justify-center">
+							<div class="w-8 h-0.5 bg-gray-500 group-hover:bg-blue-400 transition-colors"></div>
 						</div>
 					</div>
-
+					
 					<!-- Response Panel -->
-					{#if response}
-						<div class="w-1/2 bg-gray-50 border-l border-gray-200 flex flex-col">
-							<div class="border-b border-gray-200 p-4">
-								<h3 class="text-lg font-medium text-gray-900">Response</h3>
-								<div class="flex items-center space-x-4 mt-2 text-sm">
-									<span class="px-2 py-1 rounded text-xs font-mono {response.status >= 200 && response.status < 300 ? 'bg-green-100 text-green-800' : response.status >= 400 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">{response.status}</span>
-									<span class="text-gray-600">{response.time}ms</span>
+					<div 
+						class="border-t border-gray-700 overflow-hidden flex-shrink-0" 
+						style="height: {responseHeight}px; min-height: 200px; max-height: 70vh;"
+					>
+						<ResponsePanel 
+							{response}
+							{isExecuting}
+							bind:activeResponseTab
+						/>
+					</div>
+				{/if}
+			{:else}
+				<!-- Welcome State -->
+				<div class="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+					<div class="text-center max-w-md mx-auto px-6">
+						<!-- Electric Logo -->
+						<div class="relative mb-8">
+							<div class="absolute inset-0 flex items-center justify-center">
+								<div class="w-20 h-20 rounded-full bg-blue-500/10 blur-xl"></div>
+							</div>
+							<div class="relative flex items-center justify-center">
+								<svg class="w-16 h-16 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+									<path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+								</svg>
+							</div>
+						</div>
+						
+						<!-- Main Content -->
+						<div class="space-y-4">
+							<h2 class="text-2xl font-bold text-white">
+								Welcome to <span class="electric-gradient bg-clip-text text-transparent">Volt</span>
+							</h2>
+							<p class="text-gray-400 text-base leading-relaxed">
+								Ready to power up your API testing? Select a collection from the sidebar to start building and testing your requests.
+							</p>
+						</div>
+						
+						<!-- Feature Cards -->
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+							<div class="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 hover:bg-gray-800/70 transition-colors">
+								<div class="flex items-center space-x-3">
+									<div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+										<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+										</svg>
+									</div>
+									<div class="text-left">
+										<h4 class="text-sm font-medium text-white">Fast Testing</h4>
+										<p class="text-xs text-gray-400">Lightning quick API requests</p>
+									</div>
 								</div>
 							</div>
 							
-							<div class="flex-1 overflow-y-auto p-4">
-								<div class="space-y-4">
-									<!-- Response Headers -->
-									<div>
-										<h4 class="text-sm font-medium text-gray-700 mb-2">Headers</h4>
-										<div class="bg-white rounded border text-xs font-mono">
-											{#each Object.entries(response.headers) as [key, value]}
-												<div class="px-3 py-2 border-b border-gray-100 last:border-b-0">
-													<span class="text-gray-600">{key}:</span> <span class="text-gray-900">{value}</span>
-												</div>
-											{/each}
-										</div>
+							<div class="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 hover:bg-gray-800/70 transition-colors">
+								<div class="flex items-center space-x-3">
+									<div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+										<svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+										</svg>
 									</div>
-									
-									<!-- Response Body -->
-									<div>
-										<h4 class="text-sm font-medium text-gray-700 mb-2">Body</h4>
-										<pre class="bg-white rounded border p-3 text-xs font-mono overflow-x-auto">{formatResponseBody(response.body)}</pre>
+									<div class="text-left">
+										<h4 class="text-sm font-medium text-white">Organized</h4>
+										<p class="text-xs text-gray-400">Collections keep you tidy</p>
+									</div>
+								</div>
+							</div>
+							
+							<div class="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 hover:bg-gray-800/70 transition-colors">
+								<div class="flex items-center space-x-3">
+									<div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+										<svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+										</svg>
+									</div>
+									<div class="text-left">
+										<h4 class="text-sm font-medium text-white">Collaborative</h4>
+										<p class="text-xs text-gray-400">Team-friendly workspace</p>
+									</div>
+								</div>
+							</div>
+							
+							<div class="bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 hover:bg-gray-800/70 transition-colors">
+								<div class="flex items-center space-x-3">
+									<div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+										<svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+										</svg>
+									</div>
+									<div class="text-left">
+										<h4 class="text-sm font-medium text-white">Multiple Tabs</h4>
+										<p class="text-xs text-gray-400">Work on multiple requests</p>
 									</div>
 								</div>
 							</div>
 						</div>
-					{/if}
-				</div>
-			{:else}
-				<!-- Welcome State -->
-				<div class="flex-1 flex items-center justify-center">
-					<div class="text-center">
-						<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-						</svg>
-						<h3 class="mt-2 text-sm font-medium text-gray-900">No collection selected</h3>
-						<p class="mt-1 text-sm text-gray-500">Select a collection from the sidebar to start building requests.</p>
+						
+						<!-- Call to Action -->
+						<div class="mt-8 space-y-3">
+							<p class="text-sm text-gray-500">
+								Get started by selecting a collection or creating a new one
+							</p>
+							<div class="flex items-center justify-center space-x-2 text-xs text-gray-600">
+								<kbd class="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-gray-400">⌘</kbd>
+								<span>+</span>
+								<kbd class="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-gray-400">K</kbd>
+								<span class="ml-2">to search</span>
+							</div>
+						</div>
 					</div>
 				</div>
 			{/if}
@@ -628,74 +850,22 @@
 </div>
 
 <!-- Create Collection Modal -->
-{#if showNewCollectionModal}
-	<div class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-		<div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-			<div class="px-6 py-4 border-b border-gray-200">
-				<h3 class="text-lg font-medium text-gray-900">Create New Collection</h3>
-			</div>
-			
-			<div class="px-6 py-4">
-				<div class="space-y-4">
-					<div>
-						<label for="collectionName" class="block text-sm font-medium text-gray-700">
-							Collection Name
-						</label>
-						<input
-							id="collectionName"
-							type="text"
-							bind:value={newCollectionName}
-							placeholder="User API"
-							class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-						/>
-					</div>
-					
-					<div>
-						<label for="collectionDescription" class="block text-sm font-medium text-gray-700">
-							Description (optional)
-						</label>
-						<textarea
-							id="collectionDescription"
-							bind:value={newCollectionDescription}
-							placeholder="API endpoints for user management..."
-							rows="3"
-							class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-						></textarea>
-					</div>
-				</div>
-			</div>
-			
-			<div class="px-6 py-4 bg-gray-50 flex justify-end space-x-3 rounded-b-lg">
-				<button
-					on:click={() => showNewCollectionModal = false}
-					disabled={isCreatingCollection}
-					class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-				>
-					Cancel
-				</button>
-				<button
-					on:click={createCollection}
-					disabled={isCreatingCollection || !newCollectionName.trim()}
-					class="px-4 py-2 text-sm font-medium text-white electric-gradient rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 flex items-center"
-				>
-					{#if isCreatingCollection}
-						<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-						</svg>
-						Creating...
-					{:else}
-						Create Collection
-					{/if}
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
+<CreateCollectionModal
+	show={showNewCollectionModal}
+	bind:collectionName={newCollectionName}
+	bind:collectionDescription={newCollectionDescription}
+	isCreating={isCreatingCollection}
+	on:close={() => showNewCollectionModal = false}
+	on:create={(e) => {
+		newCollectionName = e.detail.name;
+		newCollectionDescription = e.detail.description;
+		createCollection();
+	}}
+/>
 
 <!-- Error Toast -->
 {#if error}
-	<div class="fixed bottom-4 right-4 bg-red-50 border border-red-200 rounded-md p-4 max-w-sm z-50">
+	<div class="fixed bottom-4 right-4 bg-red-900 border border-red-700 rounded-md p-4 max-w-sm z-50">
 		<div class="flex">
 			<div class="flex-shrink-0">
 				<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -703,12 +873,12 @@
 				</svg>
 			</div>
 			<div class="ml-3">
-				<p class="text-sm text-red-800">{error}</p>
+				<p class="text-sm text-red-200">{error}</p>
 			</div>
 			<div class="ml-auto pl-3">
 				<button
 					on:click={() => error = ''}
-					class="text-red-400 hover:text-red-600"
+					class="text-red-400 hover:text-red-300"
 				>
 					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -720,12 +890,19 @@
 {/if}
 
 <style>
-	.electric-gradient {
-		background: linear-gradient(135deg, var(--electric-blue), var(--deep-blue));
+	/* Remove all outline styles globally */
+	* {
+		outline: none !important;
 	}
 	
-	.bg-clip-text {
-		background-clip: text;
-		-webkit-background-clip: text;
+	*:focus {
+		outline: none !important;
+	}
+	
+	button:focus,
+	input:focus,
+	textarea:focus,
+	select:focus {
+		outline: none !important;
 	}
 </style>

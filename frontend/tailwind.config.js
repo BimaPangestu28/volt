@@ -14,7 +14,7 @@ export default {
         'error': '#EF4444',
       },
       fontFamily: {
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'sans': ['Poppins', 'system-ui', 'sans-serif'],
       },
     },
   },

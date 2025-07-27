@@ -294,10 +294,11 @@ func ExecuteRequest(c *gin.Context) {
 	}
 
 	response := models.ExecuteRequestResponse{
-		Status:  resp.StatusCode,
-		Headers: responseHeaders,
-		Body:    string(responseBody),
-		Time:    executionTime,
+		Status:     resp.StatusCode,
+		StatusText: resp.Status,
+		Headers:    responseHeaders,
+		Body:       string(responseBody),
+		Time:       executionTime,
 	}
 
 	// Store execution history
@@ -307,6 +308,118 @@ func ExecuteRequest(c *gin.Context) {
 		"request_data":  request,
 		"response_data": response,
 		"executed_at":   time.Now(),
+	}
+
+	historyDB := db.GetCollection("execution_history")
+	historyDB.InsertOne(context.Background(), history)
+
+	c.JSON(http.StatusOK, response)
+}
+
+func ExecuteRawRequest(c *gin.Context) {
+	userID := c.MustGet("user_id").(primitive.ObjectID)
+	
+	var req models.CreateRequestRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Execute the HTTP request
+	startTime := time.Now()
+	
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	var body io.Reader
+	if req.Body.Content != "" {
+		body = strings.NewReader(req.Body.Content)
+	}
+
+	httpReq, err := http.NewRequest(string(req.Method), req.URL, body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request URL or method"})
+		return
+	}
+
+	// Add headers
+	for key, value := range req.Headers {
+		httpReq.Header.Set(key, value)
+	}
+
+	// Add content type if body exists
+	if req.Body.Content != "" && httpReq.Header.Get("Content-Type") == "" {
+		switch req.Body.Type {
+		case "json":
+			httpReq.Header.Set("Content-Type", "application/json")
+		case "form":
+			httpReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		default:
+			httpReq.Header.Set("Content-Type", "text/plain")
+		}
+	}
+
+	// Add authentication
+	switch req.Auth.Type {
+	case models.Bearer:
+		if token, ok := req.Auth.Credentials["token"]; ok {
+			httpReq.Header.Set("Authorization", "Bearer "+token)
+		}
+	case models.Basic:
+		if username, ok := req.Auth.Credentials["username"]; ok {
+			if password, ok := req.Auth.Credentials["password"]; ok {
+				httpReq.SetBasicAuth(username, password)
+			}
+		}
+	case models.APIKey:
+		if key, ok := req.Auth.Credentials["key"]; ok {
+			if header, ok := req.Auth.Credentials["header"]; ok {
+				httpReq.Header.Set(header, key)
+			}
+		}
+	}
+
+	// Execute request
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to execute request: " + err.Error()})
+		return
+	}
+	defer resp.Body.Close()
+
+	executionTime := time.Since(startTime).Milliseconds()
+
+	// Read response body
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read response body"})
+		return
+	}
+
+	// Convert headers to map
+	responseHeaders := make(map[string]string)
+	for key, values := range resp.Header {
+		if len(values) > 0 {
+			responseHeaders[key] = values[0]
+		}
+	}
+
+	response := models.ExecuteRequestResponse{
+		Status:     resp.StatusCode,
+		StatusText: resp.Status,
+		Headers:    responseHeaders,
+		Body:       string(responseBody),
+		Time:       executionTime,
+	}
+
+	// Store execution history for debugging (optional, without user restrictions)
+	history := map[string]interface{}{
+		"user_id":       userID,
+		"request_data":  req,
+		"response_data": response,
+		"executed_at":   time.Now(),
+		"type":          "raw_execution",
 	}
 
 	historyDB := db.GetCollection("execution_history")

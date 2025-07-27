@@ -93,6 +93,9 @@ func SetupRouter() *gin.Engine {
 				requestRoutes.DELETE("/:id", handlers.DeleteRequest)
 				requestRoutes.POST("/:id/execute", handlers.ExecuteRequest)
 			}
+
+			// Execute raw request without saving
+			protected.POST("/execute-request", handlers.ExecuteRawRequest)
 		}
 	}
 

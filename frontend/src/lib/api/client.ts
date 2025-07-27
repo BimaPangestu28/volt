@@ -119,6 +119,11 @@ class ApiClient {
 		const response = await this.client.post(`/requests/${requestId}/execute`);
 		return response.data;
 	}
+
+	async executeRawRequest(requestData: any) {
+		const response = await this.client.post('/execute-request', requestData);
+		return response.data;
+	}
 }
 
 export const apiClient = new ApiClient();
