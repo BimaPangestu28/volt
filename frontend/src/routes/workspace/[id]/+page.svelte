@@ -10,9 +10,12 @@
 	// Components
 	import WorkspaceHeader from '$lib/components/workspace/WorkspaceHeader.svelte';
 	import CollectionsSidebar from '$lib/components/workspace/CollectionsSidebar.svelte';
+	import EnvironmentsSidebar from '$lib/components/workspace/EnvironmentsSidebar.svelte';
+	import EnvironmentManager from '$lib/components/workspace/EnvironmentManager.svelte';
 	import RequestBuilder from '$lib/components/workspace/RequestBuilder.svelte';
 	import ResponsePanel from '$lib/components/workspace/ResponsePanel.svelte';
 	import CreateCollectionModal from '$lib/components/workspace/CreateCollectionModal.svelte';
+	import CreateEnvironmentModal from '$lib/components/workspace/CreateEnvironmentModal.svelte';
 
 	let workspaceId = '';
 	let isAuthenticated = false;
@@ -23,6 +26,10 @@
 	let requests: any[] = [];
 	let isLoading = true;
 	let error = '';
+	
+	// Search state
+	let searchResults: any[] = [];
+	let isSearching = false;
 	
 	// Request builder state
 	let requestName = 'New Request';
@@ -49,6 +56,18 @@
 	let newCollectionName = '';
 	let newCollectionDescription = '';
 	let isCreatingCollection = false;
+
+	// Environment state
+	let environments: any[] = [];
+	let selectedEnvironment: any = null;
+	let isLoadingEnvironments = false;
+	let showNewEnvironmentModal = false;
+	let newEnvironmentName = '';
+	let isCreatingEnvironment = false;
+	let isSavingEnvironment = false;
+	
+	// Sidebar tab state
+	let activeSidebarTab: 'collections' | 'environments' = 'collections';
 
 	// Resizable divider state
 	let responseHeight = 320; // Default height in pixels
@@ -235,14 +254,20 @@
 
 	async function selectCollection(event: any) {
 		const collection = event.detail;
+		
+		// Toggle collection - if already selected, close it
+		if (selectedCollection?.id === collection.id) {
+			selectedCollection = null;
+			selectedRequest = null;
+			response = null;
+			requests = [];
+			return;
+		}
+		
+		// Open new collection
 		selectedCollection = collection;
 		selectedRequest = null;
 		response = null;
-		
-		// Create first tab if no tabs exist, or if current tab is from different collection
-		if (requestTabs.length === 0) {
-			createNewTab();
-		}
 		
 		try {
 			const data = await apiClient.getRequests(collection.id);
@@ -576,13 +601,8 @@
 	}
 
 	function newRequest() {
-		// If we have an empty tab that's not saved, use it instead of creating new one
-		const currentTab = requestTabs.find(t => t.id === activeTabId);
-		if (currentTab && !currentTab.requestId && !currentTab.url && !currentTab.body && currentTab.name.startsWith('New Request')) {
-			// Current tab is already empty, no need to create new one
-			return;
-		}
-		
+		// Always create a new tab when user explicitly clicks "Add request"
+		// This ensures user gets a fresh tab for new request
 		createNewTab();
 	}
 
@@ -659,6 +679,156 @@
 			}
 		}
 	}
+
+	// Environment functions
+	async function loadEnvironments() {
+		if (!workspaceId) return;
+		
+		isLoadingEnvironments = true;
+		try {
+			const data = await apiClient.getEnvironments(workspaceId);
+			environments = data;
+		} catch (err: any) {
+			console.error('Error loading environments:', err);
+			toastStore.error('Failed to load environments');
+		} finally {
+			isLoadingEnvironments = false;
+		}
+	}
+
+	async function createEnvironment() {
+		if (!newEnvironmentName.trim()) return;
+
+		isCreatingEnvironment = true;
+		try {
+			const environment = await apiClient.createEnvironment(workspaceId, newEnvironmentName);
+			environments = [...environments, environment];
+			toastStore.success(`Environment "${newEnvironmentName}" created successfully!`);
+			
+			newEnvironmentName = '';
+			showNewEnvironmentModal = false;
+		} catch (err: any) {
+			const errorMessage = err.response?.data?.error || 'Failed to create environment';
+			toastStore.error(errorMessage);
+		} finally {
+			isCreatingEnvironment = false;
+		}
+	}
+
+	function selectEnvironment(event: any) {
+		selectedEnvironment = event.detail;
+	}
+
+	async function saveEnvironment(event: any) {
+		const environment = event.detail;
+		
+		isSavingEnvironment = true;
+		try {
+			const updatedEnvironment = await apiClient.updateEnvironment(
+				environment.id,
+				environment.name,
+				environment.variables
+			);
+			
+			// Update environment in list
+			const index = environments.findIndex(env => env.id === environment.id);
+			if (index >= 0) {
+				environments[index] = updatedEnvironment;
+				environments = [...environments];
+			}
+			
+			// Update selected environment
+			if (selectedEnvironment?.id === environment.id) {
+				selectedEnvironment = updatedEnvironment;
+			}
+			
+			toastStore.success('Environment saved successfully!');
+		} catch (err: any) {
+			const errorMessage = err.response?.data?.error || 'Failed to save environment';
+			toastStore.error(errorMessage);
+		} finally {
+			isSavingEnvironment = false;
+		}
+	}
+
+	async function deleteEnvironment(event: any) {
+		const environment = event.detail;
+		
+		const confirmed = confirm(`Delete environment "${environment.name}"? This action cannot be undone.`);
+		if (!confirmed) return;
+		
+		try {
+			await apiClient.deleteEnvironment(environment.id);
+			environments = environments.filter(env => env.id !== environment.id);
+			
+			if (selectedEnvironment?.id === environment.id) {
+				selectedEnvironment = null;
+			}
+			
+			toastStore.success(`Environment "${environment.name}" deleted successfully!`);
+		} catch (err: any) {
+			const errorMessage = err.response?.data?.error || 'Failed to delete environment';
+			toastStore.error(errorMessage);
+		}
+	}
+
+	function handleSwitchTab(event: any) {
+		activeSidebarTab = event.detail;
+		
+		// Load environments when switching to environments tab
+		if (activeSidebarTab === 'environments' && environments.length === 0) {
+			loadEnvironments();
+		}
+	}
+
+	// Search handler
+	async function handleSearch(event: any) {
+		const { query, workspaceId } = event.detail;
+		
+		if (!query || !workspaceId) {
+			searchResults = [];
+			return;
+		}
+
+		isSearching = true;
+		try {
+			const results = await apiClient.searchWorkspace(workspaceId, query);
+			searchResults = results;
+		} catch (err: any) {
+			console.error('Search error:', err);
+			searchResults = [];
+			toastStore.error('Search failed');
+		} finally {
+			isSearching = false;
+		}
+	}
+
+	function handleSearchResultClick(event: any) {
+		const result = event.detail;
+		
+		if (result.type === 'collection') {
+			// Select the collection
+			const collection = collections.find(c => c.id === result.id);
+			if (collection) {
+				selectCollection({ detail: collection });
+			}
+		} else if (result.type === 'request') {
+			// Find and select the collection first, then the request
+			const collection = collections.find(c => 
+				c.requests && c.requests.includes(result.id)
+			);
+			if (collection) {
+				selectCollection({ detail: collection });
+				// Wait a bit for requests to load, then select the request
+				setTimeout(() => {
+					const request = requests.find(r => r.id === result.id);
+					if (request) {
+						selectRequest({ detail: request });
+					}
+				}, 100);
+			}
+		}
+	}
 </script>
 
 <svelte:head>
@@ -671,27 +841,89 @@
 <div class="h-screen flex flex-col bg-gray-900">
 	<!-- Header -->
 	<WorkspaceHeader 
-		{currentWorkspace} 
-		on:createCollection={() => showNewCollectionModal = true} 
+		{currentWorkspace}
+		{searchResults}
+		on:createCollection={() => showNewCollectionModal = true}
+		on:linkGenerated={(e) => {
+			console.log('Invitation link generated:', e.detail);
+			toastStore.success('Invitation link generated successfully!');
+		}}
+		on:search={handleSearch}
+		on:searchResultClick={handleSearchResultClick}
 	/>
 
 	<div class="flex-1 flex overflow-hidden">
 		<!-- Sidebar -->
-		<CollectionsSidebar
-			{collections}
-			{selectedCollection}
-			{selectedRequest}
-			{requests}
-			{isLoading}
-			on:selectCollection={selectCollection}
-			on:selectRequest={selectRequest}
-			on:newRequest={newRequest}
-			on:createCollection={() => showNewCollectionModal = true}
-		/>
+		{#if activeSidebarTab === 'collections'}
+			<CollectionsSidebar
+				{collections}
+				{selectedCollection}
+				{selectedRequest}
+				{requests}
+				{isLoading}
+				activeTab={activeSidebarTab}
+				on:selectCollection={selectCollection}
+				on:selectRequest={selectRequest}
+				on:newRequest={newRequest}
+				on:createCollection={() => showNewCollectionModal = true}
+				on:refreshCollections={loadCollections}
+				on:switchTab={handleSwitchTab}
+			/>
+		{:else if activeSidebarTab === 'environments'}
+			<div class="flex bg-gray-800 border-r border-gray-700">
+				<!-- Left Navigation (same as collections) -->
+				<div class="w-20 bg-gray-900 border-r border-gray-700 flex flex-col">
+					<div class="py-4 space-y-3">
+						<!-- Collections Icon -->
+						<div class="flex flex-col items-center px-1">
+							<button 
+								on:click={() => handleSwitchTab({ detail: 'collections' })}
+								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors text-gray-400 hover:bg-gray-700 hover:text-white"
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+								</svg>
+							</button>
+							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-gray-500">Collections</span>
+						</div>
+						
+						<!-- Environments Icon -->
+						<div class="flex flex-col items-center px-1">
+							<button 
+								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors bg-blue-600 text-white hover:bg-blue-500"
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9"></path>
+								</svg>
+							</button>
+							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-blue-400">Environments</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Environments Sidebar -->
+				<EnvironmentsSidebar
+					{environments}
+					{selectedEnvironment}
+					isLoading={isLoadingEnvironments}
+					on:selectEnvironment={selectEnvironment}
+					on:createEnvironment={() => showNewEnvironmentModal = true}
+					on:deleteEnvironment={deleteEnvironment}
+				/>
+			</div>
+		{/if}
 
 		<!-- Main Content -->
 		<div class="flex-1 flex flex-col bg-gray-900 overflow-hidden relative">
-			{#if selectedCollection}
+			{#if activeSidebarTab === 'environments'}
+				<!-- Environment Manager -->
+				<EnvironmentManager
+					environment={selectedEnvironment}
+					isLoading={isLoadingEnvironments}
+					isSaving={isSavingEnvironment}
+					on:saveEnvironment={saveEnvironment}
+				/>
+			{:else if selectedCollection}
 				<!-- Request Builder -->
 				<div 
 					class="overflow-hidden bg-gray-900" 
@@ -714,6 +946,11 @@
 						bind:activeTab
 						{isExecuting}
 						{saveCompletedCounter}
+						{requestTabs}
+						{activeTabId}
+						onSwitchTab={switchToTab}
+						onCloseTab={closeTab}
+						onCreateTab={createNewTab}
 						on:executeRequest={executeRequest}
 						on:saveRequest={saveRequest}
 					/>
@@ -860,6 +1097,18 @@
 		newCollectionName = e.detail.name;
 		newCollectionDescription = e.detail.description;
 		createCollection();
+	}}
+/>
+
+<!-- Create Environment Modal -->
+<CreateEnvironmentModal
+	show={showNewEnvironmentModal}
+	bind:environmentName={newEnvironmentName}
+	isCreating={isCreatingEnvironment}
+	on:close={() => showNewEnvironmentModal = false}
+	on:create={(e) => {
+		newEnvironmentName = e.detail.name;
+		createEnvironment();
 	}}
 />
 

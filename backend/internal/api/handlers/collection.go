@@ -50,7 +50,28 @@ func GetCollections(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, collections)
+	// Add is_favorited field for current user
+	type CollectionResponse struct {
+		models.Collection
+		IsFavorited bool `json:"is_favorited"`
+	}
+
+	var response []CollectionResponse
+	for _, coll := range collections {
+		isFavorited := false
+		for _, favUserID := range coll.FavoritedBy {
+			if favUserID == userID {
+				isFavorited = true
+				break
+			}
+		}
+		response = append(response, CollectionResponse{
+			Collection:  coll,
+			IsFavorited: isFavorited,
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func CreateCollection(c *gin.Context) {
@@ -88,6 +109,7 @@ func CreateCollection(c *gin.Context) {
 		WorkspaceID: workspaceID,
 		CreatedBy:   userID,
 		Requests:    []primitive.ObjectID{},
+		FavoritedBy: []primitive.ObjectID{},
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
@@ -242,4 +264,77 @@ func DeleteCollection(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Collection deleted successfully"})
+}
+
+func ToggleCollectionFavorite(c *gin.Context) {
+	userID := c.MustGet("user_id").(primitive.ObjectID)
+	collectionID, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
+		return
+	}
+
+	collectionDB := db.GetCollection("collections")
+	
+	// Check if collection exists and user has access
+	var collection models.Collection
+	err = collectionDB.FindOne(context.Background(), bson.M{"_id": collectionID}).Decode(&collection)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
+		return
+	}
+
+	// Check workspace access
+	workspaceCollection := db.GetCollection("workspaces")
+	var workspace models.Workspace
+	err = workspaceCollection.FindOne(context.Background(), bson.M{
+		"_id": collection.WorkspaceID,
+		"$or": []bson.M{
+			{"owner_id": userID},
+			{"members": userID},
+		},
+	}).Decode(&workspace)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Access denied"})
+		return
+	}
+
+	// Check if user already favorited this collection
+	isFavorited := false
+	for _, favUserID := range collection.FavoritedBy {
+		if favUserID == userID {
+			isFavorited = true
+			break
+		}
+	}
+
+	var update bson.M
+	var message string
+
+	if isFavorited {
+		// Remove from favorites
+		update = bson.M{
+			"$pull": bson.M{"favorited_by": userID},
+			"$set":  bson.M{"updated_at": time.Now()},
+		}
+		message = "Collection removed from favorites"
+	} else {
+		// Add to favorites
+		update = bson.M{
+			"$addToSet": bson.M{"favorited_by": userID},
+			"$set":      bson.M{"updated_at": time.Now()},
+		}
+		message = "Collection added to favorites"
+	}
+
+	_, err = collectionDB.UpdateOne(context.Background(), bson.M{"_id": collectionID}, update)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update collection favorites"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":     message,
+		"is_favorited": !isFavorited,
+	})
 }

@@ -1,0 +1,57 @@
+# Git
+.git
+.gitignore
+README.md
+DEPLOYMENT.md
+
+# Development
+.env
+.env.local
+.env.development
+.env.test
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+build/
+dist/
+target/
+*.out
+
+# Logs
+*.log
+logs/
+
+# Runtime
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+*.lcov
+
+# Testing
+.nyc_output
+
+# Cache
+.cache/
+.eslintcache
+.stylelintcache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.yml
+docker-compose.dev.yml
+Dockerfile.dev
+
+# Deployment
+scripts/
+nginx/

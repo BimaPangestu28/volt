@@ -18,6 +18,8 @@ export interface Collection {
 	workspace_id: string;
 	created_by: string;
 	requests: string[];
+	favorited_by: string[];
+	is_favorited: boolean;
 	created_at: string;
 	updated_at: string;
 }

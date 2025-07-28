@@ -20,91 +20,147 @@
 	<title>Volt - API Client for Teams</title>
 </svelte:head>
 
-<div class="min-h-screen flex flex-col">
+<div class="min-h-screen bg-white">
 	<!-- Header -->
-	<header class="electric-gradient text-white">
-		<nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<div class="flex items-center justify-between h-16">
+	<nav class="border-b border-gray-200">
+		<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="flex justify-between items-center h-16">
 				<div class="flex items-center">
-					<h1 class="text-2xl font-bold">⚡ Volt</h1>
+					<div class="flex-shrink-0 flex items-center">
+						<span class="text-xl font-semibold text-gray-900">Volt</span>
+					</div>
 				</div>
-				<div class="flex space-x-4">
-					<a href="/login" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors">
-						Login
-					</a>
-					<a href="/register" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-4 py-2 rounded-lg font-medium transition-colors">
-						Get Started
+				<div class="flex items-center space-x-4">
+					<a href="/docs" class="text-sm text-gray-500 hover:text-gray-900">Docs</a>
+					<a href="/login" class="text-sm text-gray-500 hover:text-gray-900">Login</a>
+					<a href="/register" class="bg-gray-900 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-gray-800">
+						Sign up
 					</a>
 				</div>
 			</div>
-		</nav>
-	</header>
+		</div>
+	</nav>
 
 	<!-- Hero Section -->
-	<main class="flex-1 flex items-center justify-center px-4">
-		<div class="max-w-4xl mx-auto text-center">
-			<h2 class="text-5xl font-bold text-gray-900 mb-6">
-				API Testing Made <span class="text-blue-600">Electric</span>
-			</h2>
-			<p class="text-xl text-gray-600 mb-8 leading-relaxed">
-				Collaborative API client with real-time features, auto-import from your codebase, 
-				and team synchronization. Built for modern development teams.
-			</p>
-			
-			<div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-				<a href="/register" class="electric-gradient text-white px-8 py-4 rounded-lg font-medium text-lg hover:opacity-90 transition-opacity">
-					Start Free Trial
-				</a>
-				<a href="/demo" class="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg font-medium text-lg hover:bg-blue-50 transition-colors">
-					View Demo
-				</a>
+	<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+		<div class="py-20">
+			<div class="text-center">
+				<h1 class="text-5xl font-bold text-gray-900 tracking-tight mb-6">
+					Collaborative API client with auto-import
+				</h1>
+				<p class="text-xl text-gray-600 max-w-3xl mx-auto mb-10">
+					Real-time collaboration and automatic API discovery from your NestJS, Express, and FastAPI projects. 
+					Stop manually importing endpoints.
+				</p>
+				
+				<div class="bg-gray-50 rounded-lg p-6 max-w-2xl mx-auto mb-12">
+					<div class="text-sm text-gray-500 mb-2">Install the CLI</div>
+					<div class="bg-black text-green-400 font-mono text-sm p-3 rounded mb-3">
+						<span class="text-gray-400">$</span> npm install -g @volt/cli
+					</div>
+					<div class="text-sm text-gray-500 mb-2">Auto-import your NestJS APIs</div>
+					<div class="bg-black text-green-400 font-mono text-sm p-3 rounded">
+						<span class="text-gray-400">$</span> volt init --framework nestjs
+					</div>
+				</div>
+				
+				<div class="flex justify-center gap-4">
+					<a href="/register" class="bg-gray-900 text-white px-6 py-3 rounded-md font-medium hover:bg-gray-800">
+						Start free trial
+					</a>
+					<a href="/demo" class="border border-gray-300 px-6 py-3 rounded-md hover:border-gray-400">
+						Watch demo
+					</a>
+				</div>
 			</div>
+		</div>
 
-			<!-- Features Grid -->
-			<div class="grid md:grid-cols-3 gap-8 mt-16">
-				<div class="card">
-					<div class="w-12 h-12 electric-gradient rounded-lg flex items-center justify-center mb-4 mx-auto">
-						<span class="text-white text-xl">🚀</span>
+		<!-- Features Grid -->
+		<div class="py-16">
+			<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+				<div class="border border-gray-200 rounded-lg p-6">
+					<div class="text-2xl mb-3">🔄</div>
+					<h3 class="text-lg font-semibold text-gray-900 mb-3">Automatic API Discovery</h3>
+					<p class="text-gray-600 text-sm leading-relaxed mb-3">
+						Install <code class="bg-gray-100 px-1 rounded">@volt/nestjs</code> in your project and watch all your endpoints automatically appear in Volt.
+					</p>
+					<div class="text-xs text-gray-500">
+						Supports: NestJS • Express (coming soon) • FastAPI (coming soon)
 					</div>
-					<h3 class="text-xl font-semibold mb-2">Auto-Import APIs</h3>
-					<p class="text-gray-600">
-						Automatically discover and sync API endpoints from NestJS, Express, and other frameworks.
+				</div>
+				
+				<div class="border border-gray-200 rounded-lg p-6">
+					<div class="text-2xl mb-3">👥</div>
+					<h3 class="text-lg font-semibold text-gray-900 mb-3">Live Collaboration</h3>
+					<p class="text-gray-600 text-sm leading-relaxed mb-3">
+						See your team's changes in real-time. Live cursors, shared request execution, and instant sync across all devices.
+					</p>
+					<div class="text-xs text-gray-500">
+						Multi-user editing • Live presence • Real-time comments
+					</div>
+				</div>
+				
+				<div class="border border-gray-200 rounded-lg p-6">
+					<div class="text-2xl mb-3">⚡</div>
+					<h3 class="text-lg font-semibold text-gray-900 mb-3">Built for Speed</h3>
+					<p class="text-gray-600 text-sm leading-relaxed mb-3">
+						Modern interface with keyboard shortcuts, instant request execution, and zero-config environment sync.
+					</p>
+					<div class="text-xs text-gray-500">
+						WebSocket-powered • Environment variables • Request history
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Getting Started Section -->
+		<div class="border-t border-gray-200 py-16">
+			<div class="text-center mb-12">
+				<h2 class="text-2xl font-semibold text-gray-900 mb-4">How it works</h2>
+				<p class="text-gray-600">Three steps to collaborative API testing</p>
+			</div>
+			
+			<div class="grid md:grid-cols-3 gap-8">
+				<div class="text-center">
+					<div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+						<span class="text-blue-600 font-semibold">1</span>
+					</div>
+					<h3 class="font-semibold mb-2">Install & Connect</h3>
+					<p class="text-gray-600 text-sm">
+						Add <code class="bg-gray-100 px-1 rounded">@volt/nestjs</code> to your project and run <code class="bg-gray-100 px-1 rounded">volt sync</code>
 					</p>
 				</div>
 				
-				<div class="card">
-					<div class="w-12 h-12 electric-gradient rounded-lg flex items-center justify-center mb-4 mx-auto">
-						<span class="text-white text-xl">👥</span>
+				<div class="text-center">
+					<div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+						<span class="text-blue-600 font-semibold">2</span>
 					</div>
-					<h3 class="text-xl font-semibold mb-2">Real-time Collaboration</h3>
-					<p class="text-gray-600">
-						Work together with your team in real-time. See live cursors, share executions, and collaborate seamlessly.
+					<h3 class="font-semibold mb-2">Auto-Import</h3>
+					<p class="text-gray-600 text-sm">
+						All your API endpoints appear automatically with types, docs, and sample data
 					</p>
 				</div>
 				
-				<div class="card">
-					<div class="w-12 h-12 electric-gradient rounded-lg flex items-center justify-center mb-4 mx-auto">
-						<span class="text-white text-xl">⚡</span>
+				<div class="text-center">
+					<div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+						<span class="text-blue-600 font-semibold">3</span>
 					</div>
-					<h3 class="text-xl font-semibold mb-2">Lightning Fast</h3>
-					<p class="text-gray-600">
-						Built for speed with modern web technologies. Test APIs instantly and get immediate feedback.
+					<h3 class="font-semibold mb-2">Collaborate</h3>
+					<p class="text-gray-600 text-sm">
+						Invite your team and test APIs together in real-time with live sync
 					</p>
 				</div>
 			</div>
 		</div>
-	</main>
 
+	</main>
+	
 	<!-- Footer -->
-	<footer class="bg-gray-900 text-white py-8">
-		<div class="max-w-7xl mx-auto px-4 text-center">
-			<p>&copy; 2024 Volt API Client. Built with ⚡ for developers.</p>
+	<footer class="border-t border-gray-200 py-8">
+		<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="text-center text-sm text-gray-500">
+				<p>&copy; 2024 Volt. Made by developers for developers.</p>
+			</div>
 		</div>
 	</footer>
 </div>
 
-<style>
-	.electric-gradient {
-		background: linear-gradient(135deg, var(--electric-blue), var(--deep-blue));
-	}
-</style>

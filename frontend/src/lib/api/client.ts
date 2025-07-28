@@ -89,6 +89,21 @@ class ApiClient {
 		return response.data;
 	}
 
+	async updateCollection(collectionId: string, data: {name: string; description: string}) {
+		const response = await this.client.put(`/collections/${collectionId}`, data);
+		return response.data;
+	}
+
+	async deleteCollection(collectionId: string) {
+		const response = await this.client.delete(`/collections/${collectionId}`);
+		return response.data;
+	}
+
+	async toggleCollectionFavorite(collectionId: string) {
+		const response = await this.client.post(`/collections/${collectionId}/favorite`);
+		return response.data;
+	}
+
 	// Requests
 	async getRequests(collectionId: string) {
 		const response = await this.client.get(`/collection-requests/${collectionId}`);
@@ -122,6 +137,108 @@ class ApiClient {
 
 	async executeRawRequest(requestData: any) {
 		const response = await this.client.post('/execute-request', requestData);
+		return response.data;
+	}
+
+	// Dashboard Analytics
+	async getDashboardStats() {
+		const response = await this.client.get('/dashboard/stats');
+		return response.data;
+	}
+
+	async getApiHealth() {
+		const response = await this.client.get('/dashboard/api-health');
+		return response.data;
+	}
+
+	async getRecentActivity() {
+		const response = await this.client.get('/dashboard/activity');
+		return response.data;
+	}
+
+	async getTeamMembers() {
+		const response = await this.client.get('/dashboard/team');
+		return response.data;
+	}
+
+	async getNotifications() {
+		const response = await this.client.get('/notifications');
+		return response.data;
+	}
+
+	async markNotificationAsRead(notificationId: string) {
+		const response = await this.client.patch(`/notifications/${notificationId}/read`);
+		return response.data;
+	}
+
+	async markAllNotificationsAsRead() {
+		const response = await this.client.patch('/notifications/mark-all-read');
+		return response.data;
+	}
+
+	// Search functionality
+	async searchWorkspace(workspaceId: string, query: string) {
+		const response = await this.client.get(`/workspaces/${workspaceId}/search`, {
+			params: { q: query }
+		});
+		return response.data;
+	}
+
+	// Workspace members
+	async generateInvitationLink(workspaceId: string, role: string = 'member', expiresInHours: number = 168) {
+		const response = await this.client.post(`/workspaces/${workspaceId}/invite-link`, {
+			role,
+			expiresInHours
+		});
+		return response.data;
+	}
+
+	async getWorkspaceMembers(workspaceId: string) {
+		const response = await this.client.get(`/workspaces/${workspaceId}/members`);
+		return response.data;
+	}
+
+	async removeWorkspaceMember(workspaceId: string, memberId: string) {
+		const response = await this.client.delete(`/workspaces/${workspaceId}/members/${memberId}`);
+		return response.data;
+	}
+
+	async updateWorkspaceMemberRole(workspaceId: string, memberId: string, role: string) {
+		const response = await this.client.patch(`/workspaces/${workspaceId}/members/${memberId}`, {
+			role
+		});
+		return response.data;
+	}
+
+	// Environment endpoints
+	async getEnvironments(workspaceId: string) {
+		const response = await this.client.get(`/workspace-environments/${workspaceId}`);
+		return response.data;
+	}
+
+	async createEnvironment(workspaceId: string, name: string, variables: any[] = []) {
+		const response = await this.client.post(`/workspace-environments/${workspaceId}`, {
+			name,
+			variables
+		});
+		return response.data;
+	}
+
+	async getEnvironment(environmentId: string) {
+		const response = await this.client.get(`/environments/${environmentId}`);
+		return response.data;
+	}
+
+	async updateEnvironment(environmentId: string, name: string, variables: any[]) {
+		const response = await this.client.put(`/environments/${environmentId}`, {
+			name,
+			variables
+		});
+		return response.data;
+	}
+
+	async deleteEnvironment(environmentId: string) {
+		const response = await this.client.delete(`/environments/${environmentId}`);
 		return response.data;
 	}
 }

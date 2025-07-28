@@ -68,6 +68,10 @@ func SetupRouter() *gin.Engine {
 			protected.GET("/workspace-detail/:id", handlers.GetWorkspace)
 			protected.PUT("/workspace-detail/:id", handlers.UpdateWorkspace)
 			protected.DELETE("/workspace-detail/:id", handlers.DeleteWorkspace)
+			
+			// Workspace invitations
+			protected.POST("/workspaces/:id/invite-link", handlers.GenerateInvitationLink)
+			protected.POST("/invitations/:token/accept", handlers.AcceptInvitation)
 
 			// Collections - workspace specific
 			protected.GET("/workspace-collections/:workspaceId", handlers.GetCollections)
@@ -79,6 +83,7 @@ func SetupRouter() *gin.Engine {
 				collectionRoutes.GET("/:id", handlers.GetCollection)
 				collectionRoutes.PUT("/:id", handlers.UpdateCollection)
 				collectionRoutes.DELETE("/:id", handlers.DeleteCollection)
+				collectionRoutes.POST("/:id/favorite", handlers.ToggleCollectionFavorite)
 			}
 
 			// Requests - collection specific
@@ -96,6 +101,18 @@ func SetupRouter() *gin.Engine {
 
 			// Execute raw request without saving
 			protected.POST("/execute-request", handlers.ExecuteRawRequest)
+
+			// Environments - workspace specific
+			protected.GET("/workspace-environments/:workspaceId", handlers.GetEnvironments)
+			protected.POST("/workspace-environments/:workspaceId", handlers.CreateEnvironment)
+
+			// Environments - individual operations
+			environmentRoutes := protected.Group("/environments")
+			{
+				environmentRoutes.GET("/:id", handlers.GetEnvironment)
+				environmentRoutes.PUT("/:id", handlers.UpdateEnvironment)
+				environmentRoutes.DELETE("/:id", handlers.DeleteEnvironment)
+			}
 		}
 	}
 
