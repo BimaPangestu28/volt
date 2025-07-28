@@ -1,4 +1,4 @@
-name: Build and Deploy Volt
+name: Simple Deploy with Docker Compose
 
 on:
   push:
@@ -50,10 +50,8 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: ${{ env.BACKEND_IMAGE }}:${{ steps.tag.outputs.IMAGE_TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-      # Build Frontend
+      # Build Frontend  
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
@@ -61,13 +59,45 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: ${{ env.FRONTEND_IMAGE }}:${{ steps.tag.outputs.IMAGE_TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-  # Deploy using SSH with password  
+  # Deploy to staging (develop branch)
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+      - name: Deploy to staging server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          password: ${{ secrets.STAGING_PASSWORD }}
+          port: ${{ secrets.STAGING_PORT || 22 }}
+          script: |
+            echo "🚀 Deploying Volt to staging..."
+            
+            cd /opt/volt
+            
+            # Update image tags in docker-compose
+            export BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}:develop
+            export FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}:develop
+            
+            # Pull and restart services
+            docker-compose -f docker-compose.staging.yml pull
+            docker-compose -f docker-compose.staging.yml up -d
+            
+            # Cleanup
+            docker image prune -f
+            
+            echo "✅ Staging deployment completed!"
+
+  # Deploy to production (main branch)
   deploy-production:
     runs-on: ubuntu-latest
     needs: build
+    if: github.ref == 'refs/heads/main'
     environment: production
     
     steps:
@@ -81,38 +111,43 @@ jobs:
           script: |
             echo "🚀 Deploying Volt to production..."
             
-            # Go to volt directory
             cd /opt/volt
             
-            # Pull latest images
-            docker pull ${{ env.BACKEND_IMAGE }}:latest
-            docker pull ${{ env.FRONTEND_IMAGE }}:latest
+            # Update image tags in docker-compose
+            export BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}:latest
+            export FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}:latest
             
-            # Update Docker Swarm services (or deploy if not exists)
-            docker service update --image ${{ env.BACKEND_IMAGE }}:latest volt-prod_backend || \
-            docker stack deploy -c docker-compose.prod.yml volt-prod
-            
-            docker service update --image ${{ env.FRONTEND_IMAGE }}:latest volt-prod_frontend || \
-            docker stack deploy -c docker-compose.prod.yml volt-prod
+            # Pull and restart services with zero downtime
+            docker-compose -f docker-compose.prod.yml pull
+            docker-compose -f docker-compose.prod.yml up -d
             
             # Cleanup old images
             docker image prune -f
             
             echo "✅ Production deployment completed!"
 
-      - name: Notify deployment success
-        if: success()
-        run: |
-          echo "🎉 Production deployment successful!"
-          # Add notification here if needed
+      - name: Health check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          password: ${{ secrets.PROD_PASSWORD }}
+          port: ${{ secrets.PROD_PORT || 22 }}
+          script: |
+            echo "🔍 Running health checks..."
+            
+            # Wait for services to start
+            sleep 10
+            
+            # Check backend health
+            curl -f http://localhost:8080/health || echo "❌ Backend health check failed"
+            
+            # Check frontend is responding
+            curl -f http://localhost:3000 || echo "❌ Frontend health check failed"
+            
+            echo "✅ Health checks completed!"
 
-      - name: Notify deployment failure
-        if: failure()
-        run: |
-          echo "❌ Production deployment failed!"
-          # Add failure notification here if needed
-
-  # Test deployment (PR only)
+  # Test only (PR)
   test:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'

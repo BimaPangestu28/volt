@@ -1,349 +1,291 @@
-# Volt - Docker Swarm Deployment Guide
+# Volt Deployment Guide
 
-This guide explains how to deploy the Volt API client application using Docker Swarm with CI/CD pipeline via GitHub Actions.
+Simple deployment menggunakan GitHub Actions + SSH + Docker Swarm.
 
-## 🚀 Quick Start
+## 🚀 Setup Server
 
-### Prerequisites
-
-- Docker Engine 20.10+
-- Docker Compose v2+
-- Git
-- OpenSSL (for generating secrets)
-
-### 1. Initial Setup
-
+### 1. Persiapan Server
 ```bash
-# Clone the repository
-git clone https://github.com/bimapangestu/volt.git
-cd volt
-
-# Setup Docker Swarm
-./scripts/setup-swarm.sh setup
-
-# Generate secure credentials
-./scripts/generate-secrets.sh generate
-# Edit .env.prod with your domain URLs
-
-# Deploy the application
-./scripts/deploy.sh deploy
-```
-
-## 📋 Detailed Deployment Guide
-
-### Step 1: Server Preparation
-
-```bash
-# Update system packages
-sudo apt update && sudo apt upgrade -y
-
-# Install Docker
+# Install Docker & Docker Compose
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 sudo usermod -aG docker $USER
 
 # Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/download/v2.21.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
-# Verify installation
-docker --version
-docker-compose --version
+# Initialize Docker Swarm
+sudo docker swarm init
 ```
 
-### Step 2: Initialize Docker Swarm
-
+### 2. Setup Directory Structure
 ```bash
-# Option 1: Complete setup (recommended)
-./scripts/setup-swarm.sh setup [your-server-ip]
+# Create project directory
+sudo mkdir -p /opt/volt
+cd /opt/volt
 
-# Option 2: Manual setup
-./scripts/setup-swarm.sh init [your-server-ip]
-./scripts/setup-swarm.sh networks
-./scripts/setup-swarm.sh secrets
+# Copy configuration files
+sudo wget https://raw.githubusercontent.com/yourusername/volt/main/docker-compose.prod.yml
+sudo wget https://raw.githubusercontent.com/yourusername/volt/main/docker-compose.staging.yml
+sudo wget https://raw.githubusercontent.com/yourusername/volt/main/.env.production.example -O .env.production
+sudo wget https://raw.githubusercontent.com/yourusername/volt/main/.env.staging.example -O .env.staging
 
-# Generate secure passwords (do this AFTER swarm init)
-./scripts/generate-secrets.sh all
+# Edit environment variables
+sudo nano .env.production
+sudo nano .env.staging
 ```
 
-### Step 3: Generate Secure Credentials
-
-Generate cryptographically secure passwords and configuration:
-
+### 3. Setup Environment Variables
+Edit `/opt/volt/.env.production`:
 ```bash
-# Generate secure .env.prod file with strong passwords
-./scripts/generate-secrets.sh generate
+# Database
+MONGO_USERNAME=voltuser
+MONGO_PASSWORD=your-secure-mongo-password-here
+REDIS_PASSWORD=your-secure-redis-password-here
+JWT_SECRET=your-super-secure-jwt-secret-key-minimum-64-chars
 
-# Or generate all components (recommended)
-./scripts/generate-secrets.sh all
+# Update dengan domain Anda
+CORS_ORIGIN=https://volt.yourdomain.com
+WS_ORIGIN=wss://api.yourdomain.com
 ```
 
-This will create `.env.prod` with:
-- **MongoDB**: Complex username/password (40+ chars)
-- **Redis**: Secure password (35+ chars) 
-- **JWT**: Cryptographically strong secret (100+ chars)
-- **Proper file permissions** (600)
+## 🔑 Setup GitHub Secrets
 
-Edit the generated `.env.prod` to update domain URLs:
+Di GitHub repository, tambahkan secrets berikut:
 
+### Docker Hub
+- `DOCKER_USERNAME`: Username Docker Hub
+- `DOCKER_PASSWORD`: Password Docker Hub
+
+### Production Server
+- `PROD_HOST`: IP address server production
+- `PROD_USER`: Username SSH (biasanya `root` atau `ubuntu`)
+- `PROD_PASSWORD`: Password SSH user
+- `PROD_PORT`: SSH port (optional, default 22)
+
+### Staging Server (optional)
+- `STAGING_HOST`: IP address server staging
+- `STAGING_USER`: Username SSH
+- `STAGING_PASSWORD`: Password SSH user
+- `STAGING_PORT`: SSH port (optional, default 22)
+
+## 📦 Deployment Process
+
+### Automatic Deployment
+- **Push ke `main`** → Deploy ke production
+- **Push ke `develop`** → Deploy ke staging
+- **Pull Request** → Run tests only
+
+### Manual Deployment
 ```bash
-# Update these values for your domain
-FRONTEND_URL=https://yourdomain.com
-WS_ORIGIN=wss://yourdomain.com
-API_URL=https://api.yourdomain.com
-WS_URL=wss://api.yourdomain.com
+# Production
+cd /opt/volt
+source .env.production
+docker stack deploy -c docker-compose.prod.yml volt-prod
+
+# Staging
+cd /opt/volt
+source .env.staging
+docker stack deploy -c docker-compose.staging.yml volt-staging
 ```
 
-### Step 4: Deploy Application
+## 🔧 Management Commands
 
+### Check Status
 ```bash
-# Deploy the complete stack
-./scripts/deploy.sh deploy
+# Check services
+docker service ls
 
-# Check deployment status
-./scripts/deploy.sh status
+# Check specific service logs
+docker service logs volt-prod_backend
+docker service logs volt-prod_frontend
 
-# View service logs
-./scripts/deploy.sh logs backend
-./scripts/deploy.sh logs frontend
+# Check container status
+docker ps
 ```
 
-## 🔧 GitHub Actions CI/CD
-
-### Setup Docker Hub Integration
-
-1. **Create Docker Hub Repository**
-   ```bash
-   # Create repositories on Docker Hub:
-   # - bimapangestu/volt-backend
-   # - bimapangestu/volt-frontend
-   ```
-
-2. **Configure GitHub Secrets**
-   
-   Go to your GitHub repository → Settings → Secrets and variables → Actions
-   
-   Add the following secrets:
-   ```
-   DOCKER_USERNAME=your-dockerhub-username
-   DOCKER_PASSWORD=your-dockerhub-password
-   DOCKER_HOST=tcp://your-server:2376
-   DOCKER_CERT_PATH=/path/to/docker/certs
-   DOCKER_TLS_VERIFY=1
-   ```
-
-3. **GitHub Actions Workflow**
-   
-   The workflow (`.github/workflows/deploy.yml`) automatically:
-   - Builds and tests both backend and frontend
-   - Creates Docker images for multiple architectures (amd64, arm64)
-   - Pushes images to Docker Hub
-   - Performs security scanning with Trivy
-   - Deploys to staging (develop branch) and production (main branch)
-   - Cleans up old images
-
-### Workflow Triggers
-
-- **Pull Requests**: Build and test only
-- **Develop Branch**: Deploy to staging
-- **Main Branch**: Deploy to production
-- **Tags (v*)**: Deploy versioned release
-
-## 🏗️ Architecture Overview
-
-### Services
-
-1. **Frontend** (2 replicas)
-   - SvelteKit application with Nginx
-   - Port: 80, 443
-   - Health check: `/health`
-
-2. **Backend** (2 replicas)  
-   - Go API with Gin framework
-   - Load balanced by Nginx
-   - Health check: `/health`
-
-3. **Nginx Load Balancer**
-   - Reverse proxy for backend
-   - Rate limiting and security headers
-   - WebSocket support
-
-4. **MongoDB**
-   - Persistent data storage
-   - Authentication enabled
-   - Volume: `mongo_data`
-
-5. **Redis**
-   - Session and cache storage
-   - Password protected
-   - Volume: `redis_data`
-
-### Network Architecture
-
-```
-Internet
-    ↓
-[Load Balancer/CDN]
-    ↓
-[Docker Swarm Manager]
-    ↓
-[Frontend Services] → [Nginx LB] → [Backend Services]
-                           ↓
-                    [MongoDB] [Redis]
-```
-
-## 📊 Monitoring and Management
-
-### Service Management
-
+### Scale Services
 ```bash
-# Scale services
-./scripts/deploy.sh scale backend 4
-./scripts/deploy.sh scale frontend 3
+# Scale backend to 3 replicas
+docker service scale volt-prod_backend=3
 
-# Update specific service
-./scripts/deploy.sh update backend bimapangestu/volt-backend:v1.2.0
-
-# View service logs
-./scripts/deploy.sh logs backend
-
-# Health checks
-./scripts/deploy.sh health
+# Scale frontend to 2 replicas
+docker service scale volt-prod_frontend=2
 ```
 
-### Stack Management
-
+### Update Services
 ```bash
-# View stack status
-docker stack ls
-docker stack services volt
-docker stack ps volt
+# Update backend image
+docker service update --image bimapangestu/volt-backend:latest volt-prod_backend
 
-# Remove stack
-./scripts/deploy.sh remove
-
-# Backup data
-./scripts/deploy.sh backup
+# Update frontend image
+docker service update --image bimapangestu/volt-frontend:latest volt-prod_frontend
 ```
 
-### Node Management
-
+### Rollback
 ```bash
-# Add worker node
-./scripts/setup-swarm.sh add-worker
+# Rollback backend to previous version
+docker service rollback volt-prod_backend
 
-# Add manager node  
-./scripts/setup-swarm.sh add-manager
-
-# Label nodes for constraints
-./scripts/setup-swarm.sh label node-id env=production
-./scripts/setup-swarm.sh label node-id type=database
+# Rollback frontend to previous version
+docker service rollback volt-prod_frontend
 ```
 
-## 🔒 Security Considerations
+### Cleanup
+```bash
+# Remove unused images
+docker image prune -f
 
-### Docker Images
-- Multi-stage builds for minimal attack surface
-- Non-root user execution
-- Security scanning with Trivy
-- Regular base image updates
+# Remove unused volumes
+docker volume prune -f
 
-### Network Security
-- Overlay network isolation
-- Rate limiting on API endpoints
-- Security headers (CSP, HSTS, etc.)
-- HTTPS enforcement
+# Remove unused networks
+docker network prune -f
+```
 
-### Secrets Management
-- Docker secrets for sensitive data
-- Environment-specific configurations
-- No secrets in images or repository
+## 🌐 Nginx Configuration (Optional)
 
-### Access Control
-- Manager vs worker node separation
-- Service-specific resource limits
-- Health checks and restart policies
+Jika menggunakan external load balancer/reverse proxy, hapus service `nginx` dari docker-compose files.
+
+Contoh Nginx config (`/etc/nginx/sites-available/volt`):
+```nginx
+server {
+    listen 80;
+    server_name volt.yourdomain.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name volt.yourdomain.com;
+    
+    ssl_certificate /path/to/ssl/cert.pem;
+    ssl_certificate_key /path/to/ssl/private.key;
+    
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    location /api {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    location /webhook {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+## 🔍 Monitoring
+
+### Health Checks
+```bash
+# Check application health
+curl http://localhost:8080/health
+
+# Check service status
+docker service inspect volt-prod_backend --format='{{.UpdateStatus.State}}'
+```
+
+### Logs
+```bash
+# Follow backend logs
+docker service logs -f volt-prod_backend
+
+# Follow frontend logs
+docker service logs -f volt-prod_frontend
+
+# Check last 100 lines
+docker service logs --tail 100 volt-prod_backend
+```
 
 ## 🚨 Troubleshooting
 
-### Common Issues
-
-1. **Services not starting**
-   ```bash
-   # Check service logs
-   ./scripts/deploy.sh logs <service-name>
-   
-   # Check service constraints
-   docker service inspect volt_<service-name>
-   
-   # Check node availability
-   docker node ls
-   ```
-
-2. **Database connection issues**
-   ```bash
-   # Check MongoDB logs
-   ./scripts/deploy.sh logs mongo
-   
-   # Verify environment variables
-   docker service inspect volt_backend --format '{{.Spec.TaskTemplate.ContainerSpec.Env}}'
-   ```
-
-3. **Image pull failures**
-   ```bash
-   # Check Docker Hub connectivity
-   docker pull bimapangestu/volt-backend:latest
-   
-   # Verify registry authentication
-   docker login
-   ```
-
-### Rolling Back
-
+### Service Won't Start
 ```bash
-# Rollback to previous version
-docker service rollback volt_backend
-docker service rollback volt_frontend
+# Check service events
+docker service ps volt-prod_backend --no-trunc
 
-# Or deploy specific version
-VERSION=v1.1.0 ./scripts/deploy.sh deploy
+# Check detailed error logs
+docker service logs volt-prod_backend
 ```
 
-### Backup and Recovery
+### Database Connection Issues
+```bash
+# Check MongoDB service
+docker service logs volt-prod_mongo
 
+# Test MongoDB connection
+docker exec -it $(docker ps -qf name=volt-prod_mongo) mongo -u voltuser -p
+```
+
+### Image Pull Issues
+```bash
+# Login to Docker Hub manually
+docker login
+
+# Pull images manually
+docker pull bimapangestu/volt-backend:latest
+docker pull bimapangestu/volt-frontend:latest
+```
+
+## 📋 Maintenance
+
+### Backup Database
 ```bash
 # Create backup
-./scripts/deploy.sh backup
+docker exec $(docker ps -qf name=volt-prod_mongo) mongodump --out /backup --username voltuser --password your-password
 
-# Restore from backup (manual process)
-# 1. Stop services
-docker service scale volt_mongo=0
-
-# 2. Restore volume
-docker run --rm \
-  -v volt_mongo_data:/data \
-  -v ./backups/20240127_120000:/backup \
-  alpine tar xzf /backup/mongo_data.tar.gz -C /data
-
-# 3. Start services
-docker service scale volt_mongo=1
+# Copy backup to host
+docker cp $(docker ps -qf name=volt-prod_mongo):/backup ./backup-$(date +%Y%m%d)
 ```
 
-## 📚 Additional Resources
+### Update Stack
+```bash
+# Pull latest images
+docker pull bimapangestu/volt-backend:latest
+docker pull bimapangestu/volt-frontend:latest
 
-- [Docker Swarm Documentation](https://docs.docker.com/engine/swarm/)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [Nginx Configuration Guide](https://nginx.org/en/docs/)
-- [MongoDB Best Practices](https://docs.mongodb.com/manual/administration/production-notes/)
+# Update stack (zero-downtime)
+docker stack deploy -c docker-compose.prod.yml volt-prod
+```
 
-## 🤝 Contributing
+---
 
-1. Fork the repository
-2. Create feature branch
-3. Make changes and test locally
-4. Submit pull request
-5. GitHub Actions will automatically build and test
+## 🎯 Quick Commands Cheatsheet
 
-## 📄 License
+```bash
+# Deploy production
+docker stack deploy -c docker-compose.prod.yml volt-prod
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+# Check services
+docker service ls
+
+# Follow logs
+docker service logs -f volt-prod_backend
+
+# Scale backend
+docker service scale volt-prod_backend=3
+
+# Update backend
+docker service update --image bimapangestu/volt-backend:latest volt-prod_backend
+
+# Rollback
+docker service rollback volt-prod_backend
+
+# Remove stack
+docker stack rm volt-prod
+```

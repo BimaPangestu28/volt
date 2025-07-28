@@ -16,6 +16,9 @@
 	import ResponsePanel from '$lib/components/workspace/ResponsePanel.svelte';
 	import CreateCollectionModal from '$lib/components/workspace/CreateCollectionModal.svelte';
 	import CreateEnvironmentModal from '$lib/components/workspace/CreateEnvironmentModal.svelte';
+	import WebhooksSidebar from '$lib/components/workspace/WebhooksSidebar.svelte';
+	import WebhookManager from '$lib/components/workspace/WebhookManager.svelte';
+	import CreateWebhookModal from '$lib/components/workspace/CreateWebhookModal.svelte';
 
 	let workspaceId = '';
 	let isAuthenticated = false;
@@ -66,8 +69,15 @@
 	let isCreatingEnvironment = false;
 	let isSavingEnvironment = false;
 	
+	// Webhook state
+	let webhooks: any[] = [];
+	let selectedWebhook: any = null;
+	let isLoadingWebhooks = false;
+	let showNewWebhookModal = false;
+	let isCreatingWebhook = false;
+	
 	// Sidebar tab state
-	let activeSidebarTab: 'collections' | 'environments' = 'collections';
+	let activeSidebarTab: 'collections' | 'environments' | 'webhooks' = 'collections';
 
 	// Resizable divider state
 	let responseHeight = 320; // Default height in pixels
@@ -779,6 +789,70 @@
 		if (activeSidebarTab === 'environments' && environments.length === 0) {
 			loadEnvironments();
 		}
+		
+		// Load webhooks when switching to webhooks tab
+		if (activeSidebarTab === 'webhooks' && webhooks.length === 0) {
+			loadWebhooks();
+		}
+	}
+
+	// Webhook functions
+	async function loadWebhooks() {
+		if (!workspaceId) return;
+		
+		isLoadingWebhooks = true;
+		try {
+			const data = await apiClient.getWebhooks(workspaceId);
+			webhooks = data.webhooks || data;
+		} catch (err: any) {
+			console.error('Error loading webhooks:', err);
+			toastStore.error('Failed to load webhooks');
+		} finally {
+			isLoadingWebhooks = false;
+		}
+	}
+
+	async function createWebhook(event: any) {
+		const webhookData = event.detail;
+
+		isCreatingWebhook = true;
+		try {
+			const webhook = await apiClient.createWebhook(workspaceId, webhookData);
+			webhooks = [...webhooks, webhook];
+			toastStore.success(`Webhook "${webhookData.name}" created successfully!`);
+			
+			showNewWebhookModal = false;
+		} catch (err: any) {
+			const errorMessage = err.response?.data?.error || 'Failed to create webhook';
+			toastStore.error(errorMessage);
+		} finally {
+			isCreatingWebhook = false;
+		}
+	}
+
+	function selectWebhook(event: any) {
+		selectedWebhook = event.detail;
+	}
+
+	async function deleteWebhook(event: any) {
+		const webhook = event.detail;
+		
+		const confirmed = confirm(`Delete webhook "${webhook.name}"? This action cannot be undone.`);
+		if (!confirmed) return;
+		
+		try {
+			await apiClient.deleteWebhook(webhook.id);
+			webhooks = webhooks.filter(w => w.id !== webhook.id);
+			
+			if (selectedWebhook?.id === webhook.id) {
+				selectedWebhook = null;
+			}
+			
+			toastStore.success(`Webhook "${webhook.name}" deleted successfully!`);
+		} catch (err: any) {
+			const errorMessage = err.response?.data?.error || 'Failed to delete webhook';
+			toastStore.error(errorMessage);
+		}
 	}
 
 	// Search handler
@@ -898,6 +972,19 @@
 							</button>
 							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-blue-400">Environments</span>
 						</div>
+						
+						<!-- Webhooks Icon -->
+						<div class="flex flex-col items-center px-1">
+							<button 
+								on:click={() => handleSwitchTab({ detail: 'webhooks' })}
+								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors text-gray-400 hover:bg-gray-700 hover:text-white"
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+								</svg>
+							</button>
+							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-gray-500">Webhooks</span>
+						</div>
 					</div>
 				</div>
 
@@ -911,6 +998,61 @@
 					on:deleteEnvironment={deleteEnvironment}
 				/>
 			</div>
+		{:else if activeSidebarTab === 'webhooks'}
+			<div class="flex bg-gray-800 border-r border-gray-700">
+				<!-- Left Navigation -->
+				<div class="w-20 bg-gray-900 border-r border-gray-700 flex flex-col">
+					<div class="py-4 space-y-3">
+						<!-- Collections Icon -->
+						<div class="flex flex-col items-center px-1">
+							<button 
+								on:click={() => handleSwitchTab({ detail: 'collections' })}
+								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors text-gray-400 hover:bg-gray-700 hover:text-white"
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+								</svg>
+							</button>
+							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-gray-500">Collections</span>
+						</div>
+						
+						<!-- Environments Icon -->
+						<div class="flex flex-col items-center px-1">
+							<button 
+								on:click={() => handleSwitchTab({ detail: 'environments' })}
+								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors text-gray-400 hover:bg-gray-700 hover:text-white"
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9"></path>
+								</svg>
+							</button>
+							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-gray-500">Environments</span>
+						</div>
+						
+						<!-- Webhooks Icon -->
+						<div class="flex flex-col items-center px-1">
+							<button 
+								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors bg-purple-600 text-white hover:bg-purple-500"
+							>
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+								</svg>
+							</button>
+							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-purple-400">Webhooks</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Webhooks Sidebar -->
+				<WebhooksSidebar
+					{webhooks}
+					{selectedWebhook}
+					isLoading={isLoadingWebhooks}
+					on:selectWebhook={selectWebhook}
+					on:createWebhook={() => showNewWebhookModal = true}
+					on:refreshWebhooks={loadWebhooks}
+				/>
+			</div>
 		{/if}
 
 		<!-- Main Content -->
@@ -922,6 +1064,12 @@
 					isLoading={isLoadingEnvironments}
 					isSaving={isSavingEnvironment}
 					on:saveEnvironment={saveEnvironment}
+				/>
+			{:else if activeSidebarTab === 'webhooks'}
+				<!-- Webhook Manager -->
+				<WebhookManager
+					webhook={selectedWebhook}
+					isLoading={isLoadingWebhooks}
 				/>
 			{:else if selectedCollection}
 				<!-- Request Builder -->
@@ -1110,6 +1258,14 @@
 		newEnvironmentName = e.detail.name;
 		createEnvironment();
 	}}
+/>
+
+<!-- Create Webhook Modal -->
+<CreateWebhookModal
+	show={showNewWebhookModal}
+	isCreating={isCreatingWebhook}
+	on:close={() => showNewWebhookModal = false}
+	on:create={createWebhook}
 />
 
 <!-- Error Toast -->

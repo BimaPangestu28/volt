@@ -4,6 +4,7 @@ import (
 	"os"
 	"volt-backend/internal/api/handlers"
 	"volt-backend/internal/auth"
+	"volt-backend/internal/db"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,6 +16,9 @@ func SetupRouter() *gin.Engine {
 	}
 
 	router := gin.Default()
+
+	// Initialize handlers with database connection
+	webhookHandler := handlers.NewWebhookHandler(db.GetDB())
 
 	// CORS middleware
 	router.Use(func(c *gin.Context) {
@@ -113,8 +117,27 @@ func SetupRouter() *gin.Engine {
 				environmentRoutes.PUT("/:id", handlers.UpdateEnvironment)
 				environmentRoutes.DELETE("/:id", handlers.DeleteEnvironment)
 			}
+
+			// Webhooks - workspace specific
+			protected.GET("/workspace-webhooks/:workspaceId", webhookHandler.GetWebhooks)
+			protected.POST("/workspace-webhooks/:workspaceId", webhookHandler.CreateWebhook)
+
+			// Webhooks - individual operations
+			webhookRoutes := protected.Group("/webhooks")
+			{
+				webhookRoutes.GET("/:id", webhookHandler.GetWebhook)
+				webhookRoutes.PUT("/:id", webhookHandler.UpdateWebhook)
+				webhookRoutes.DELETE("/:id", webhookHandler.DeleteWebhook)
+				webhookRoutes.GET("/:id/requests", webhookHandler.GetWebhookRequests)
+			}
+
+			// Workspace search
+			protected.GET("/workspaces/:id/search", handlers.SearchWorkspace)
 		}
 	}
+
+	// Public webhook endpoint (no authentication required)
+	router.Any("/webhook/:token", webhookHandler.HandleWebhookRequest)
 
 	return router
 }

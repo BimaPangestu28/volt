@@ -241,6 +241,70 @@ class ApiClient {
 		const response = await this.client.delete(`/environments/${environmentId}`);
 		return response.data;
 	}
+
+	// Webhook endpoints
+	async getWebhooks(workspaceId: string, page = 1, limit = 10) {
+		const response = await this.client.get(`/workspace-webhooks/${workspaceId}?page=${page}&limit=${limit}`);
+		return response.data;
+	}
+
+	async createWebhook(workspaceId: string, data: any) {
+		const response = await this.client.post(`/workspace-webhooks/${workspaceId}`, data);
+		return response.data;
+	}
+
+	async getWebhook(webhookId: string) {
+		const response = await this.client.get(`/webhooks/${webhookId}`);
+		return response.data;
+	}
+
+	async updateWebhook(webhookId: string, data: any) {
+		const response = await this.client.put(`/webhooks/${webhookId}`, data);
+		return response.data;
+	}
+
+	async deleteWebhook(webhookId: string) {
+		const response = await this.client.delete(`/webhooks/${webhookId}`);
+		return response.data;
+	}
+
+	async getWebhookRequests(webhookId: string, page = 1, limit = 20) {
+		const response = await this.client.get(`/webhooks/${webhookId}/requests?page=${page}&limit=${limit}`);
+		return response.data;
+	}
+
+	async testWebhook(url: string, method = 'POST', headers: Record<string, string> = {}, body = '') {
+		try {
+			const response = await fetch(url, {
+				method,
+				headers: {
+					'Content-Type': 'application/json',
+					...headers
+				},
+				body: method !== 'GET' ? body : undefined
+			});
+			
+			const responseText = await response.text();
+			return {
+				success: true,
+				status: response.status,
+				statusText: response.statusText,
+				headers: Object.fromEntries(response.headers.entries()),
+				body: responseText,
+				timestamp: new Date().toISOString()
+			};
+		} catch (error: any) {
+			return {
+				success: false,
+				status: 0,
+				statusText: 'Network Error',
+				headers: {},
+				body: error.message,
+				error: error.message,
+				timestamp: new Date().toISOString()
+			};
+		}
+	}
 }
 
 export const apiClient = new ApiClient();

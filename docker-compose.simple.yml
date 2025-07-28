@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ${BACKEND_IMAGE:-bimapangestu/volt-backend:latest}
+    container_name: volt-backend
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/volt
+      - REDIS_URI=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=8080
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+      - WS_ORIGIN=${WS_ORIGIN:-ws://localhost:8080}
+      - GIN_MODE=${GIN_MODE:-release}
+    ports:
+      - "8080:8080"
+    networks:
+      - volt-network
+    restart: unless-stopped
+    depends_on:
+      - mongo
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-bimapangestu/volt-frontend:latest}
+    container_name: volt-frontend
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8080}
+      - VITE_APP_NAME=${VITE_APP_NAME:-Volt}
+      - VITE_BRAND_COLOR=${VITE_BRAND_COLOR:-#2563EB}
+    ports:
+      - "3000:3000"
+    networks:
+      - volt-network
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  mongo:
+    image: mongo:7
+    container_name: volt-mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-voltuser}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_INITDB_DATABASE=volt
+    volumes:
+      - mongo_data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - volt-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: volt-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - volt-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mongo_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  volt-network:
+    driver: bridge
