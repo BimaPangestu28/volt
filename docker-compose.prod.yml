@@ -8,8 +8,8 @@ services:
       - REDIS_URI=redis://redis:6379
       - JWT_SECRET=${JWT_SECRET}
       - PORT=8080
-      - CORS_ORIGIN=https://volt.yourdomain.com
-      - WS_ORIGIN=wss://api.yourdomain.com
+      - CORS_ORIGIN=https://volt.catalystlabs.id
+      - WS_ORIGIN=wss://volt-api.catalystlabs.id
       - GIN_MODE=release
     networks:
       - volt-network
@@ -30,8 +30,8 @@ services:
   frontend:
     image: bimapangestu/volt-frontend:latest
     environment:
-      - VITE_API_URL=https://api.yourdomain.com
-      - VITE_WS_URL=wss://api.yourdomain.com
+      - VITE_API_URL=https://volt-api.catalystlabs.id
+      - VITE_WS_URL=wss://volt-api.catalystlabs.id
       - VITE_APP_NAME=Volt
       - VITE_BRAND_COLOR=#2563EB
     networks:
@@ -95,7 +95,6 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/ssl/certs:ro
     networks:
       - volt-network
     deploy:

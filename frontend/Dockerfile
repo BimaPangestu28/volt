@@ -23,29 +23,33 @@ COPY . .
 # Build the application
 RUN pnpm run build
 
-# Production stage with Nginx
-FROM nginx:alpine AS production
+# Production stage - serve with Node.js
+FROM node:alpine AS production
 
 # Install security updates
-RUN apk --no-cache add ca-certificates tzdata wget && \
+RUN apk --no-cache add ca-certificates tzdata && \
     addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
-# Copy built application
-COPY --from=builder /app/.svelte-kit/output/client /usr/share/nginx/html
+WORKDIR /app
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy built application and package files
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
 
-# Create health check endpoint
-RUN echo '<!DOCTYPE html><html><head><title>Health Check</title></head><body><h1>OK</h1></body></html>' > /usr/share/nginx/html/health
+# Change ownership
+RUN chown -R appuser:appgroup /app
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 3000
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+# Start the application
+CMD ["node", "build"]

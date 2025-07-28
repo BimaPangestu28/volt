@@ -82,18 +82,18 @@ jobs:
             echo "🚀 Deploying Volt to production..."
             
             # Go to volt directory
-            cd /opt/volt
+            cd ~/volt
             
             # Pull latest images
             docker pull ${{ env.BACKEND_IMAGE }}:latest
             docker pull ${{ env.FRONTEND_IMAGE }}:latest
             
             # Update Docker Swarm services (or deploy if not exists)
-            docker service update --image ${{ env.BACKEND_IMAGE }}:latest volt-prod_backend || \
-            docker stack deploy -c docker-compose.prod.yml volt-prod
+            docker service update --image ${{ env.BACKEND_IMAGE }}:latest volt-volt_backend || \
+            docker stack deploy -c docker-compose.yml volt
             
-            docker service update --image ${{ env.FRONTEND_IMAGE }}:latest volt-prod_frontend || \
-            docker stack deploy -c docker-compose.prod.yml volt-prod
+            docker service update --image ${{ env.FRONTEND_IMAGE }}:latest volt-volt_frontend || \
+            docker stack deploy -c docker-compose.yml volt
             
             # Cleanup old images
             docker image prune -f
