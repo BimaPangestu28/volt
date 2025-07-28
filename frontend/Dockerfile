@@ -5,22 +5,23 @@ FROM node:alpine AS builder
 ARG BUILDTIME
 ARG VERSION
 
-# Install build dependencies
-RUN apk add --no-cache libc6-compat
+# Install build dependencies and pnpm
+RUN apk add --no-cache libc6-compat && \
+    npm install -g pnpm
 
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN pnpm install --prod=false
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 # Production stage with Nginx
 FROM nginx:alpine AS production
@@ -31,7 +32,7 @@ RUN apk --no-cache add ca-certificates tzdata wget && \
     adduser -u 1001 -S appuser -G appgroup
 
 # Copy built application
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder /app/.svelte-kit/output/client /usr/share/nginx/html
 
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf

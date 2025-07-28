@@ -34,7 +34,10 @@
       "Bash(pnpm add:*)",
       "Bash(go build:*)",
       "Bash(chmod:*)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(timeout 5 go run cmd/server/main.go)",
+      "Bash(docker-compose build:*)",
+      "Bash(docker compose:*)"
     ],
     "deny": []
   }

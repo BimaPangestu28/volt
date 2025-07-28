@@ -24,7 +24,7 @@ func SetupRouter() *gin.Engine {
 	router.Use(func(c *gin.Context) {
 		origin := os.Getenv("CORS_ORIGIN")
 		if origin == "" {
-			origin = "http://localhost:5176" // Update to match current frontend port
+			origin = "http://localhost:5173" // Default frontend port
 		}
 		
 		c.Header("Access-Control-Allow-Origin", origin)
@@ -131,8 +131,25 @@ func SetupRouter() *gin.Engine {
 				webhookRoutes.GET("/:id/requests", webhookHandler.GetWebhookRequests)
 			}
 
-			// Workspace search
-			protected.GET("/workspaces/:id/search", handlers.SearchWorkspace)
+			// Dashboard routes
+			dashboardRoutes := protected.Group("/dashboard")
+			{
+				dashboardRoutes.GET("/stats", handlers.GetDashboardStats)
+				dashboardRoutes.GET("/api-health", handlers.GetAPIHealth)
+				dashboardRoutes.GET("/activity", handlers.GetDashboardActivity)
+				dashboardRoutes.GET("/team", handlers.GetDashboardTeam)
+			}
+
+			// Notifications routes
+			notificationRoutes := protected.Group("/notifications")
+			{
+				notificationRoutes.GET("", handlers.GetNotifications)
+				notificationRoutes.PUT("/:id/read", handlers.MarkNotificationAsRead)
+				notificationRoutes.PUT("/read-all", handlers.MarkAllNotificationsAsRead)
+			}
+
+			// Workspace search - TODO: implement SearchWorkspace handler
+			// protected.GET("/workspaces/:id/search", handlers.SearchWorkspace)
 		}
 	}
 

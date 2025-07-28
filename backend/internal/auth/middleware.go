@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -42,4 +43,22 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("email", claims.Email)
 		c.Next()
 	}
+}
+
+func GetUserID(c *gin.Context) string {
+	if userID, exists := c.Get("user_id"); exists {
+		if objectID, ok := userID.(primitive.ObjectID); ok {
+			return objectID.Hex()
+		}
+	}
+	return ""
+}
+
+func GetUserObjectID(c *gin.Context) primitive.ObjectID {
+	if userID, exists := c.Get("user_id"); exists {
+		if objectID, ok := userID.(primitive.ObjectID); ok {
+			return objectID
+		}
+	}
+	return primitive.NilObjectID
 }

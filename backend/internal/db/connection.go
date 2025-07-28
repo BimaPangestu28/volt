@@ -71,6 +71,10 @@ func Disconnect() {
 	}
 }
 
+func GetDB() *mongo.Database {
+	return Database
+}
+
 func GetCollection(name string) *mongo.Collection {
 	return Database.Collection(name)
 }

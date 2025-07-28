@@ -10,7 +10,7 @@
 	export let selectedRequest: any = null;
 	export let requests: any[] = [];
 	export let isLoading = false;
-	export let activeTab: 'collections' | 'environments' = 'collections';
+	export let activeTab: 'collections' | 'environments' | 'webhooks' = 'collections';
 
 	// Local state for UI
 	let showOptionsMenu: string | null = null;
@@ -217,14 +217,17 @@
 				<span class="text-[9px] font-medium text-center leading-tight px-0.5 {activeTab === 'environments' ? 'text-blue-400' : 'text-gray-500'}">Environments</span>
 			</div>
 			
-			<!-- APIs Icon -->
+			<!-- Webhooks Icon -->
 			<div class="flex flex-col items-center px-1">
-				<button class="w-10 h-10 flex items-center justify-center rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors mb-1.5">
+				<button 
+					on:click={() => dispatch('switchTab', 'webhooks')}
+					class="w-10 h-10 flex items-center justify-center rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors mb-1.5"
+				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
 					</svg>
 				</button>
-				<span class="text-[9px] text-gray-500 font-medium text-center leading-tight px-0.5">APIs</span>
+				<span class="text-[9px] text-gray-500 font-medium text-center leading-tight px-0.5">Webhooks</span>
 			</div>
 			
 			<!-- Flows Icon -->

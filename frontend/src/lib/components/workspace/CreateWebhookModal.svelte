@@ -145,14 +145,14 @@
 			<!-- Header -->
 			<div class="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 rounded-t-lg">
 				<div class="flex items-center justify-between">
-					<h2 class="text-xl font-semibold text-white flex items-center">
-						<svg class="w-6 h-6 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<h2 class="text-lg font-semibold text-white flex items-center">
+						<svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
 						</svg>
 						Create New Webhook
 					</h2>
 					<button on:click={close} class="text-gray-400 hover:text-white transition-colors">
-						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
 						</svg>
 					</button>
@@ -163,7 +163,7 @@
 			<div class="p-6 space-y-6">
 				<!-- Basic Information -->
 				<div class="bg-gray-700/30 rounded-lg p-4 space-y-4">
-					<h3 class="text-lg font-medium text-white">Basic Information</h3>
+					<h3 class="text-base font-medium text-white">Basic Information</h3>
 					
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<div>
@@ -174,7 +174,7 @@
 								type="text"
 								bind:value={webhookName}
 								placeholder="My API Webhook"
-								class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+								class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 							/>
 						</div>
 
@@ -186,7 +186,7 @@
 								min="0"
 								max="365"
 								placeholder="0 = Never expires"
-								class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+								class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 							/>
 						</div>
 					</div>
@@ -197,14 +197,14 @@
 							bind:value={webhookDescription}
 							placeholder="Webhook for receiving payment notifications..."
 							rows="2"
-							class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+							class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
 						></textarea>
 					</div>
 				</div>
 
 				<!-- HTTP Methods -->
 				<div class="bg-gray-700/30 rounded-lg p-4 space-y-4">
-					<h3 class="text-lg font-medium text-white">Allowed HTTP Methods</h3>
+					<h3 class="text-base font-medium text-white">Allowed HTTP Methods</h3>
 					<div class="grid grid-cols-3 md:grid-cols-5 gap-3">
 						{#each availableMethods as method}
 							<label class="flex items-center space-x-2 cursor-pointer">
@@ -223,29 +223,29 @@
 				<!-- Response Configuration -->
 				<div class="bg-gray-700/30 rounded-lg p-4 space-y-4">
 					<div class="flex items-center justify-between">
-						<h3 class="text-lg font-medium text-white">Response Configuration</h3>
+						<h3 class="text-base font-medium text-white">Response Configuration</h3>
 						<div class="flex space-x-2">
 							<button
 								on:click={() => setDefaultResponse('success')}
-								class="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded"
+								class="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
 							>
 								Success
 							</button>
 							<button
 								on:click={() => setDefaultResponse('echo')}
-								class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded"
+								class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
 							>
 								Echo
 							</button>
 							<button
 								on:click={() => setDefaultResponse('error')}
-								class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded"
+								class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
 							>
 								Error
 							</button>
 							<button
 								on:click={() => setDefaultResponse('empty')}
-								class="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded"
+								class="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
 							>
 								Empty
 							</button>
@@ -260,7 +260,7 @@
 								bind:value={responseStatus}
 								min="100"
 								max="599"
-								class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+								class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 							/>
 						</div>
 
@@ -268,7 +268,7 @@
 							<label class="block text-sm font-medium text-gray-300 mb-2">Content Type</label>
 							<select
 								bind:value={contentType}
-								class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+								class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 							>
 								<option value="application/json">application/json</option>
 								<option value="text/plain">text/plain</option>
@@ -286,7 +286,7 @@
 								min="0"
 								max="30000"
 								placeholder="0"
-								class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+								class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 							/>
 						</div>
 					</div>
@@ -309,13 +309,13 @@
 										type="text"
 										bind:value={header.key}
 										placeholder="Header name"
-										class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+										class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 									/>
 									<input
 										type="text"
 										bind:value={header.value}
 										placeholder="Header value"
-										class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+										class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 									/>
 									<button
 										on:click={() => removeResponseHeader(index)}
@@ -347,7 +347,7 @@
 				<!-- Authentication -->
 				<div class="bg-gray-700/30 rounded-lg p-4 space-y-4">
 					<div class="flex items-center justify-between">
-						<h3 class="text-lg font-medium text-white">Authentication</h3>
+						<h3 class="text-base font-medium text-white">Authentication</h3>
 						<label class="relative inline-flex items-center cursor-pointer">
 							<input type="checkbox" bind:checked={authEnabled} class="sr-only peer">
 							<div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
@@ -360,7 +360,7 @@
 								<label class="block text-sm font-medium text-gray-300 mb-2">Authentication Type</label>
 								<select
 									bind:value={authType}
-									class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+									class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 								>
 									{#each authTypes as type}
 										<option value={type.value}>{type.label}</option>
@@ -376,7 +376,7 @@
 											type="text"
 											bind:value={authUsername}
 											placeholder="username"
-											class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+											class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 										/>
 									</div>
 									<div>
@@ -385,7 +385,7 @@
 											type="password"
 											bind:value={authPassword}
 											placeholder="password"
-											class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+											class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 										/>
 									</div>
 								</div>
@@ -396,7 +396,7 @@
 										type="text"
 										bind:value={authToken}
 										placeholder="your-bearer-token"
-										class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+										class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 									/>
 								</div>
 							{/if}
@@ -408,7 +408,7 @@
 
 				<!-- Advanced Options -->
 				<div class="bg-gray-700/30 rounded-lg p-4 space-y-4">
-					<h3 class="text-lg font-medium text-white">Advanced Options</h3>
+					<h3 class="text-base font-medium text-white">Advanced Options</h3>
 					
 					<div class="flex items-center justify-between">
 						<div>
@@ -428,14 +428,14 @@
 				<div class="flex items-center justify-end space-x-3">
 					<button
 						on:click={close}
-						class="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+						class="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors"
 					>
 						Cancel
 					</button>
 					<button
 						on:click={createWebhook}
 						disabled={isCreating || !webhookName.trim() || selectedMethods.length === 0}
-						class="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded transition-colors flex items-center"
+						class="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition-colors flex items-center"
 					>
 						{#if isCreating}
 							<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">

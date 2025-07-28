@@ -17,7 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"volt/internal/models"
+	"volt-backend/internal/models"
 )
 
 type WebhookHandler struct {
