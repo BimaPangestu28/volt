@@ -96,11 +96,11 @@ jobs:
           script: |
             echo "🚀 Deploying Volt with version: ${{ steps.build-info.outputs.IMAGE_TAG }}"
             
-            cd /root/volt
+            cd ~/volt
             
             # Update docker-compose with new image tags
-            sed -i "s|bimapangestu/volt-backend:.*|bimapangestu/volt-backend:${{ steps.build-info.outputs.IMAGE_TAG }}|g" docker-compose.prod.yml
-            sed -i "s|bimapangestu/volt-frontend:.*|bimapangestu/volt-frontend:${{ steps.build-info.outputs.IMAGE_TAG }}|g" docker-compose.prod.yml
+            sed -i "s|bimapangestu/volt-backend:.*|bimapangestu/volt-backend:${{ steps.build-info.outputs.IMAGE_TAG }}|g" docker-compose.yml
+            sed -i "s|bimapangestu/volt-frontend:.*|bimapangestu/volt-frontend:${{ steps.build-info.outputs.IMAGE_TAG }}|g" docker-compose.yml
             
             # Remove old stack
             docker stack rm volt || true
@@ -111,7 +111,7 @@ jobs:
             docker pull bimapangestu/volt-frontend:${{ steps.build-info.outputs.IMAGE_TAG }}
             
             # Deploy new stack
-            docker stack deploy -c docker-compose.prod.yml volt
+            docker stack deploy -c docker-compose.yml volt
             
             # Cleanup old images (keep last 3 versions)
             docker images bimapangestu/volt-backend --format "table {{.Tag}}" | tail -n +4 | xargs -r docker rmi bimapangestu/volt-backend: || true
