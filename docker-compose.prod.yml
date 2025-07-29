@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   backend:
-    image: bimapangestu/volt-backend:latest
+    image: bimapangestu/volt-backend:v1.0.0
     environment:
       - MONGO_URI=mongodb://mongo:27017/volt
       - REDIS_URI=redis://redis:6379
@@ -28,7 +28,7 @@ services:
       - redis
 
   frontend:
-    image: bimapangestu/volt-frontend:latest
+    image: bimapangestu/volt-frontend:v1.0.0
     environment:
       - VITE_API_URL=https://volt-api.catalystlabs.id
       - VITE_WS_URL=wss://volt-api.catalystlabs.id

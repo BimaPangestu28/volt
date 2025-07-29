@@ -16,6 +16,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
+    outputs:
+      image_tag: ${{ steps.tag.outputs.IMAGE_TAG }}
     
     steps:
       - name: Checkout code
@@ -24,12 +26,19 @@ jobs:
       - name: Set image tag
         id: tag
         run: |
+          # Always use commit hash for better tracking
+          SHORT_SHA=${GITHUB_SHA::8}
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          
           if [[ $GITHUB_REF == refs/heads/main ]]; then
-            echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=${TIMESTAMP}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+            echo "ENV=production" >> $GITHUB_OUTPUT
           elif [[ $GITHUB_REF == refs/heads/develop ]]; then
-            echo "IMAGE_TAG=develop" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=dev-${TIMESTAMP}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+            echo "ENV=staging" >> $GITHUB_OUTPUT
           else
-            echo "IMAGE_TAG=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=pr-${SHORT_SHA}" >> $GITHUB_OUTPUT
+            echo "ENV=test" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up Docker Buildx
@@ -65,40 +74,50 @@ jobs:
           cache-to: type=gha,mode=max
 
   # Deploy using SSH with password  
-  deploy-production:
+  deploy:
     runs-on: ubuntu-latest
     needs: build
+    if: github.ref == 'refs/heads/main'
     environment: production
     
     steps:
+      - name: Get build info
+        id: build-info
+        run: |
+          echo "IMAGE_TAG=${{ needs.build.outputs.image_tag }}" >> $GITHUB_OUTPUT
+      
       - name: Deploy to production server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.PROD_HOST }}
-          username: ${{ secrets.PROD_USER }}
-          password: ${{ secrets.PROD_PASSWORD }}
-          port: ${{ secrets.PROD_PORT || 22 }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
           script: |
-            echo "🚀 Deploying Volt to production..."
+            echo "🚀 Deploying Volt with version: ${{ steps.build-info.outputs.IMAGE_TAG }}"
             
-            # Go to volt directory
-            cd ~/volt
+            cd /root/volt
             
-            # Pull latest images
-            docker pull ${{ env.BACKEND_IMAGE }}:latest
-            docker pull ${{ env.FRONTEND_IMAGE }}:latest
+            # Update docker-compose with new image tags
+            sed -i "s|bimapangestu/volt-backend:.*|bimapangestu/volt-backend:${{ steps.build-info.outputs.IMAGE_TAG }}|g" docker-compose.prod.yml
+            sed -i "s|bimapangestu/volt-frontend:.*|bimapangestu/volt-frontend:${{ steps.build-info.outputs.IMAGE_TAG }}|g" docker-compose.prod.yml
             
-            # Update Docker Swarm services (or deploy if not exists)
-            docker service update --image ${{ env.BACKEND_IMAGE }}:latest volt-volt_backend || \
-            docker stack deploy -c docker-compose.yml volt
+            # Remove old stack
+            docker stack rm volt || true
+            sleep 10
             
-            docker service update --image ${{ env.FRONTEND_IMAGE }}:latest volt-volt_frontend || \
-            docker stack deploy -c docker-compose.yml volt
+            # Pull new images
+            docker pull bimapangestu/volt-backend:${{ steps.build-info.outputs.IMAGE_TAG }}
+            docker pull bimapangestu/volt-frontend:${{ steps.build-info.outputs.IMAGE_TAG }}
             
-            # Cleanup old images
-            docker image prune -f
+            # Deploy new stack
+            docker stack deploy -c docker-compose.prod.yml volt
             
-            echo "✅ Production deployment completed!"
+            # Cleanup old images (keep last 3 versions)
+            docker images bimapangestu/volt-backend --format "table {{.Tag}}" | tail -n +4 | xargs -r docker rmi bimapangestu/volt-backend: || true
+            docker images bimapangestu/volt-frontend --format "table {{.Tag}}" | tail -n +4 | xargs -r docker rmi bimapangestu/volt-frontend: || true
+            
+            echo "✅ Deployment completed with version: ${{ steps.build-info.outputs.IMAGE_TAG }}"
 
       - name: Notify deployment success
         if: success()

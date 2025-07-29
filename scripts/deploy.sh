@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Volt - Docker Swarm Deployment Script
-# This script deploys the Volt application using Docker Swarm
+# Volt Deployment Script with Versioning
+# Usage: ./scripts/deploy.sh v1.0.1
 
 set -e
 
