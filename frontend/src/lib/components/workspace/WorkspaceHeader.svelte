@@ -2,6 +2,9 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { Workspace } from '$lib/stores/workspace';
 	import InviteMemberModal from './InviteMemberModal.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { Plus, Settings, X, Search, Zap, UserPlus } from 'lucide-svelte';
 
 	export let currentWorkspace: Workspace | null = null;
 	export let searchResults: any[] = [];
@@ -91,9 +94,7 @@
 		<!-- Left side - Logo and workspace -->
 		<div class="flex items-center space-x-4 min-w-0 flex-1">
 			<a href="/dashboard" class="flex items-center space-x-2 electric-gradient bg-clip-text text-transparent hover:opacity-80 transition-opacity flex-shrink-0">
-				<svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-					<path d="M13 10V3L4 14h7v7l9-11h-7z"/>
-				</svg>
+				<Zap class="w-5 h-5 text-blue-500" />
 				<span class="text-base font-bold">Volt</span>
 			</a>
 			<div class="w-px h-6 bg-gray-600"></div>
@@ -108,9 +109,7 @@
 		<!-- Center - Search -->
 		<div class="flex items-center justify-center flex-1 max-w-lg mx-8">
 			<div class="relative w-full max-w-sm">
-				<svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-				</svg>
+				<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
 				<input
 					type="text"
 					bind:value={searchQuery}
@@ -121,14 +120,13 @@
 				/>
 				
 				{#if searchQuery}
-					<button
-						on:click={clearSearch}
+					<IconButton
+						size="sm"
 						class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+						on:click={clearSearch}
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-						</svg>
-					</button>
+						<X class="w-4 h-4" />
+					</IconButton>
 				{/if}
 
 				<div class="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -153,8 +151,10 @@
 							</div>
 						{:else}
 							{#each searchResults as result}
-								<button
-									class="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors border-b border-gray-700 last:border-b-0"
+								<Button
+									variant="ghost"
+									size="sm"
+									class="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors border-b border-gray-700 last:border-b-0 justify-start"
 									on:click={() => dispatch('searchResultClick', result)}
 								>
 									<div class="flex items-center space-x-3">
@@ -187,7 +187,7 @@
 											<span class="text-xs text-gray-500 capitalize">{result.type}</span>
 										</div>
 									</div>
-								</button>
+								</Button>
 							{/each}
 						{/if}
 					</div>
@@ -198,34 +198,34 @@
 		<!-- Right side - Actions -->
 		<div class="flex items-center space-x-3 justify-end flex-1">
 			<!-- Invite button -->
-			<button 
+			<Button
 				on:click={handleInvite}
+				variant="secondary"
+				size="sm"
 				class="px-3 py-2 text-xs font-medium text-gray-300 hover:text-white border border-gray-600 rounded-md hover:border-gray-500 hover:bg-gray-700 transition-all duration-200 flex items-center space-x-2"
 			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-				</svg>
+				<UserPlus class="w-4 h-4" />
 				<span>Invite</span>
-			</button>
+			</Button>
 			
 			<!-- New Collection button -->
-			<button
+			<Button
 				on:click={handleCreateCollection}
+				variant="primary"
+				size="sm"
 				class="electric-gradient text-white px-4 py-2 text-xs rounded-md font-medium hover:opacity-90 transition-opacity flex items-center space-x-2"
 			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-				</svg>
+				<Plus class="w-4 h-4" />
 				<span>New</span>
-			</button>
+			</Button>
 			
 			<!-- Settings button -->
-			<button class="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-all duration-200">
-				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-				</svg>
-			</button>
+			<IconButton
+				size="sm"
+				class="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-all duration-200"
+			>
+				<Settings class="w-5 h-5" />
+			</IconButton>
 		</div>
 	</div>
 </header>

@@ -2,6 +2,9 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { apiClient } from '$lib/api/client';
 	import { toastStore } from '$lib/stores/toast';
+	import Button from '../ui/Button.svelte';
+	import IconButton from '../ui/IconButton.svelte';
+	import { Copy, RefreshCw, Trash, X } from 'lucide-svelte';
 	
 	export let webhook: any = null;
 	export let isLoading = false;
@@ -154,15 +157,14 @@
 					<div class="flex items-center bg-gray-700/50 rounded-lg px-3 py-2">
 						<span class="text-sm text-gray-300 mr-2">URL:</span>
 						<code class="text-sm font-mono text-blue-400 bg-gray-800 px-2 py-1 rounded select-all">{webhook.url}</code>
-						<button
+						<IconButton
 							on:click={copyWebhookUrl}
+							size="sm"
 							class="ml-2 p-1 text-gray-400 hover:text-white transition-colors"
 							title="Copy URL"
 						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-							</svg>
-						</button>
+							<Copy class="w-4 h-4" />
+						</IconButton>
 					</div>
 					<div class="flex items-center space-x-2">
 						<span class="w-2 h-2 bg-green-400 rounded-full"></span>
@@ -173,35 +175,33 @@
 			
 			<!-- Controls -->
 			<div class="flex items-center space-x-2">
-				<button
+				<Button
 					on:click={toggleAutoRefresh}
+					variant="secondary"
+					size="sm"
 					class="flex items-center space-x-2 px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors {autoRefresh ? 'ring-1 ring-purple-500 bg-purple-600/20' : ''}"
 				>
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-					</svg>
+					<RefreshCw class="w-4 h-4" />
 					<span>{autoRefresh ? 'Auto ON' : 'Auto OFF'}</span>
-				</button>
+				</Button>
 				
-				<button
+				<IconButton
 					on:click={() => loadWebhookRequests()}
+					size="sm"
 					class="p-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors"
 					title="Refresh requests"
 				>
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-					</svg>
-				</button>
+					<RefreshCw class="w-4 h-4" />
+				</IconButton>
 				
-				<button
+				<IconButton
 					on:click={clearAllRequests}
+					size="sm"
 					class="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors"
 					title="Clear all requests"
 				>
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-					</svg>
-				</button>
+					<Trash class="w-4 h-4" />
+				</IconButton>
 			</div>
 		</div>
 
@@ -314,14 +314,13 @@
 					<div class="p-3 border-b border-gray-700 bg-gray-800/50">
 						<div class="flex items-center justify-between">
 							<h2 class="text-base font-semibold text-white">Request Details</h2>
-							<button
+							<IconButton
 								on:click={closeRequestDetails}
+								size="sm"
 								class="p-1 text-gray-400 hover:text-white transition-colors"
 							>
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-								</svg>
-							</button>
+								<X class="w-4 h-4" />
+							</IconButton>
 						</div>
 					</div>
 					

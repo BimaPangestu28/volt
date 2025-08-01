@@ -3,6 +3,9 @@
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/auth';
 	import { apiClient } from '$lib/api/client';
+	import Button from '$lib/components/ui/Button.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { Eye, EyeOff } from 'lucide-svelte';
 
 	let email = '';
 	let password = '';
@@ -124,24 +127,18 @@
 								placeholder="Enter your password"
 							/>
 						{/if}
-						<button
-							type="button"
-							class="absolute inset-y-0 right-0 pr-3 flex items-center"
+						<IconButton
+							variant="ghost"
+							size="sm"
 							on:click={() => showPassword = !showPassword}
+							class="absolute inset-y-0 right-0 pr-3 text-gray-400 hover:text-gray-600"
 						>
 							{#if showPassword}
-								<!-- Eye slash icon (hide) -->
-								<svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M14.12 14.12l1.415 1.415M14.12 14.12L9.878 9.878m4.242 4.242L8.464 8.464m5.656 5.656l1.415 1.415"></path>
-								</svg>
+								<EyeOff class="w-5 h-5" />
 							{:else}
-								<!-- Eye icon (show) -->
-								<svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-								</svg>
+								<Eye class="w-5 h-5" />
 							{/if}
-						</button>
+						</IconButton>
 					</div>
 				</div>
 
@@ -154,21 +151,16 @@
 
 				<!-- Submit Button -->
 				<div>
-					<button
+					<Button
 						type="submit"
+						variant="primary"
+						size="md"
 						disabled={isLoading}
-						class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white electric-gradient hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+						loading={isLoading}
+						class="w-full electric-gradient"
 					>
-						{#if isLoading}
-							<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-							</svg>
-							Signing in...
-						{:else}
-							Sign in
-						{/if}
-					</button>
+						{isLoading ? 'Signing in...' : 'Sign in'}
+					</Button>
 				</div>
 			</form>
 

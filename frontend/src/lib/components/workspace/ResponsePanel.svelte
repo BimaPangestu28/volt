@@ -1,5 +1,8 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { AlignLeft, RotateCcw, Search, Copy } from 'lucide-svelte';
 
 	export let response: any = null;
 	export let isExecuting = false;
@@ -55,7 +58,9 @@
 			<!-- Response Tabs -->
 			<div class="flex items-center justify-between px-4 py-2">
 				<nav class="flex space-x-6" aria-label="Tabs">
-					<button
+					<Button
+						variant="ghost"
+						size="xs"
 						class="py-2 px-1 border-b-2 font-normal text-[10px] {
 							activeResponseTab === 'body' 
 								? 'border-blue-500 text-blue-400' 
@@ -64,8 +69,10 @@
 						on:click={() => activeResponseTab = 'body'}
 					>
 						Body
-					</button>
-					<button
+					</Button>
+					<Button
+						variant="ghost"
+						size="xs"
 						class="py-2 px-1 border-b-2 font-normal text-[10px] {
 							activeResponseTab === 'cookies' 
 								? 'border-blue-500 text-blue-400' 
@@ -74,8 +81,10 @@
 						on:click={() => activeResponseTab = 'cookies'}
 					>
 						Cookies ({0})
-					</button>
-					<button
+					</Button>
+					<Button
+						variant="ghost"
+						size="xs"
 						class="py-2 px-1 border-b-2 font-normal text-[10px] {
 							activeResponseTab === 'headers' 
 								? 'border-blue-500 text-blue-400' 
@@ -84,8 +93,10 @@
 						on:click={() => activeResponseTab = 'headers'}
 					>
 						Headers ({Object.keys(response?.headers || {}).length})
-					</button>
-					<button
+					</Button>
+					<Button
+						variant="ghost"
+						size="xs"
 						class="py-2 px-1 border-b-2 font-normal text-[10px] {
 							activeResponseTab === 'test-results' 
 								? 'border-blue-500 text-blue-400' 
@@ -94,7 +105,7 @@
 						on:click={() => activeResponseTab = 'test-results'}
 					>
 						Test Results
-					</button>
+					</Button>
 				</nav>
 				
 				{#if response}
@@ -130,81 +141,99 @@
 						<div class="mb-2 flex items-center justify-between">
 							<div class="flex items-center space-x-2">
 								{#if isJsonResponse(response)}
-									<button 
-										on:click={() => responseViewMode = 'raw'}
+									<Button
+										variant="ghost"
+										size="xs"
 										class="px-2 py-1 text-[10px] rounded font-mono border transition-all {
 											responseViewMode === 'raw' 
 												? 'bg-blue-900 text-blue-300 border-blue-700' 
 												: 'bg-gray-700 text-gray-400 border-gray-600 hover:bg-blue-900/50 hover:text-blue-300'
 										}"
+										on:click={() => responseViewMode = 'raw'}
 									>
 										JSON
-									</button>
+									</Button>
 								{:else if isHtmlResponse(response)}
-									<button 
-										on:click={() => responseViewMode = 'raw'}
+									<Button
+										variant="ghost"
+										size="xs"
 										class="px-2 py-1 text-[10px] rounded font-mono border transition-all {
 											responseViewMode === 'raw' 
 												? 'bg-orange-900 text-orange-300 border-orange-700' 
 												: 'bg-gray-700 text-gray-400 border-gray-600 hover:bg-orange-900/50 hover:text-orange-300'
 										}"
+										on:click={() => responseViewMode = 'raw'}
 									>
 										HTML
-									</button>
+									</Button>
 								{:else}
-									<button 
-										on:click={() => responseViewMode = 'raw'}
+									<Button
+										variant="ghost"
+										size="xs"
 										class="px-2 py-1 text-[10px] rounded font-mono border transition-all {
 											responseViewMode === 'raw' 
 												? 'bg-gray-600 text-gray-200 border-gray-500' 
 												: 'bg-gray-700 text-gray-400 border-gray-600 hover:bg-gray-600 hover:text-gray-200'
 										}"
+										on:click={() => responseViewMode = 'raw'}
 									>
 										Text
-									</button>
+									</Button>
 								{/if}
-								<button 
-									on:click={() => responseViewMode = 'preview'}
+								<Button
+									variant="ghost"
+									size="xs"
 									class="px-2 py-1 text-[10px] transition-colors {
 										responseViewMode === 'preview' 
 											? 'text-blue-400 font-medium' 
 											: 'text-gray-400 hover:text-gray-200'
 									}"
+									on:click={() => responseViewMode = 'preview'}
 								>
 									Preview
-								</button>
-								<button 
-									on:click={() => responseViewMode = 'visualize'}
+								</Button>
+								<Button
+									variant="ghost"
+									size="xs"
 									class="px-2 py-1 text-[10px] transition-colors {
 										responseViewMode === 'visualize' 
 											? 'text-blue-400 font-medium' 
 											: 'text-gray-400 hover:text-gray-200'
 									}"
+									on:click={() => responseViewMode = 'visualize'}
 								>
 									Visualize
-								</button>
+								</Button>
 							</div>
 							<div class="flex items-center space-x-2">
-								<button class="p-1 text-gray-400 hover:text-gray-200" title="Pretty print">
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-									</svg>
-								</button>
-								<button class="p-1 text-gray-400 hover:text-gray-200" title="Wrap lines">
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-									</svg>
-								</button>
-								<button class="p-1 text-gray-400 hover:text-gray-200" title="Search">
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-									</svg>
-								</button>
-								<button class="p-1 text-gray-400 hover:text-gray-200" title="Copy">
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-									</svg>
-								</button>
+								<IconButton
+									size="sm"
+									class="p-1 text-gray-400 hover:text-gray-200"
+									title="Pretty print"
+								>
+									<AlignLeft class="w-4 h-4" />
+								</IconButton>
+								<IconButton
+									size="sm"
+									class="p-1 text-gray-400 hover:text-gray-200"
+									title="Wrap lines"
+								>
+									<RotateCcw class="w-4 h-4" />
+								</IconButton>
+								<IconButton
+									size="sm"
+									class="p-1 text-gray-400 hover:text-gray-200"
+									title="Search"
+								>
+									<Search class="w-4 h-4" />
+								</IconButton>
+								<IconButton
+									size="sm"
+									class="p-1 text-gray-400 hover:text-gray-200"
+									title="Copy"
+								>
+									<Copy class="w-4 h-4" />
+								</IconButton>
 							</div>
 						</div>
 						<!-- Response Content Display -->

@@ -2,6 +2,9 @@
 	import { createEventDispatcher } from 'svelte';
 	import { apiClient } from '$lib/api/client';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import Button from '../ui/Button.svelte';
+	import IconButton from '../ui/IconButton.svelte';
+	import { RefreshCw, Plus, Search, Link } from 'lucide-svelte';
 
 	export let webhooks: any[] = [];
 	export let selectedWebhook: any = null;
@@ -81,24 +84,23 @@
 				Webhooks
 			</h2>
 			<div class="flex items-center space-x-2">
-				<button
-					on:click={refreshWebhooks}
+				<IconButton
+					size="sm"
 					class="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
 					title="Refresh webhooks"
+					on:click={refreshWebhooks}
 				>
-					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-					</svg>
-				</button>
-				<button
-					on:click={createWebhook}
+					<RefreshCw class="w-4 h-4" />
+				</IconButton>
+				<Button
+					variant="primary"
+					size="sm"
 					class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors flex items-center"
+					on:click={createWebhook}
 				>
-					<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-					</svg>
+					<Plus class="w-4 h-4 mr-1" />
 					New
-				</button>
+				</Button>
 			</div>
 		</div>
 
@@ -110,9 +112,7 @@
 				placeholder="Search webhooks..."
 				class="w-full px-3 py-2 pl-9 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 			/>
-			<svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-			</svg>
+			<Search class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
 		</div>
 	</div>
 
@@ -143,12 +143,14 @@
 				</svg>
 				<h3 class="text-lg font-medium text-white mb-2">No Webhooks Yet</h3>
 				<p class="text-gray-400 text-sm mb-4">Create your first webhook endpoint to start testing incoming requests.</p>
-				<button
-					on:click={createWebhook}
+				<Button
+					variant="primary"
+					size="sm"
 					class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors"
+					on:click={createWebhook}
 				>
 					Create Webhook
-				</button>
+				</Button>
 			</div>
 		</div>
 	{:else}
@@ -156,13 +158,15 @@
 		<div class="flex-1 overflow-y-auto">
 			<div class="p-2">
 				{#each filteredWebhooks as webhook (webhook.id)}
-					<button
-						on:click={() => selectWebhook(webhook)}
+					<Button
+						variant="ghost"
+						size="md"
 						class="w-full p-3 mb-2 text-left rounded-lg border transition-all hover:bg-gray-700/50 {
 							selectedWebhook?.id === webhook.id 
 								? 'bg-purple-600/20 border-purple-500 text-white' 
 								: 'bg-gray-800/50 border-gray-600 text-gray-300 hover:border-gray-500'
-						}"
+						} justify-start"
+						on:click={() => selectWebhook(webhook)}
 					>
 						<div class="flex items-start justify-between mb-2">
 							<div class="flex-1 min-w-0">
@@ -208,7 +212,7 @@
 								{webhook.url}
 							</span>
 						</div>
-					</button>
+					</Button>
 				{/each}
 			</div>
 		</div>

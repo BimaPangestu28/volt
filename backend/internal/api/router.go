@@ -140,6 +140,22 @@ func SetupRouter() *gin.Engine {
 				dashboardRoutes.GET("/team", handlers.GetDashboardTeam)
 			}
 
+			// Projects routes
+			projectRoutes := protected.Group("/projects")
+			{
+				projectRoutes.GET("", handlers.GetProjects)
+				projectRoutes.POST("", handlers.CreateProject)
+				projectRoutes.GET("/:id", handlers.GetProject)
+				projectRoutes.PUT("/:id", handlers.UpdateProject)
+				projectRoutes.DELETE("/:id", handlers.DeleteProject)
+				projectRoutes.POST("/:id/members", handlers.AddProjectMember)
+				projectRoutes.GET("/:id/tasks", handlers.GetProjectTasks)
+				projectRoutes.POST("/:id/tasks", handlers.CreateProjectTask)
+				projectRoutes.PUT("/:id/tasks/:taskId", handlers.UpdateProjectTask)
+				projectRoutes.GET("/:id/milestones", handlers.GetProjectMilestones)
+				projectRoutes.POST("/:id/milestones", handlers.CreateProjectMilestone)
+			}
+
 			// Notifications routes
 			notificationRoutes := protected.Group("/notifications")
 			{

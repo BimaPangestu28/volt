@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import typography standards */
+@import './lib/styles/typography.css';
+
 /* Global CSS Variables */
 :root {
   --electric-blue: #2563EB;

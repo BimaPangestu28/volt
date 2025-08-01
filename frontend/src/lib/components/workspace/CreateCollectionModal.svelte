@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	export let show = false;
 	export let collectionName = '';
@@ -82,25 +83,23 @@
 			</div>
 			
 			<div class="px-5 py-3 bg-gray-900 flex justify-end space-x-2 rounded-b-lg">
-				<button
+				<Button
 					on:click={handleClose}
 					disabled={isCreating}
-					class="px-3 py-1.5 text-xs font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+					variant="ghost"
+					size="sm"
 				>
 					Cancel
-				</button>
-				<button
+				</Button>
+				<Button
 					on:click={handleCreate}
 					disabled={isCreating || !collectionName.trim()}
-					class="px-3 py-1.5 text-xs font-medium text-white electric-gradient rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 flex items-center"
+					variant="primary"
+					size="sm"
+					loading={isCreating}
 				>
-					{#if isCreating}
-						<LoadingSpinner size="sm" color="white" />
-						<span class="ml-1.5">Creating...</span>
-					{:else}
-						Create Collection
-					{/if}
-				</button>
+					{isCreating ? 'Creating...' : 'Create Collection'}
+				</Button>
 			</div>
 		</div>
 	</div>

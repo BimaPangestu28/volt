@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { Search, Plus, Trash2, Eye, EyeOff, Save } from 'lucide-svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
 	
 	const dispatch = createEventDispatcher();
 
@@ -98,14 +100,16 @@
 					{#if hasUnsavedChanges}
 						<span class="text-sm text-yellow-400">Unsaved changes</span>
 					{/if}
-					<button
+					<Button
 						on:click={saveEnvironment}
 						disabled={!hasUnsavedChanges || isSaving}
-						class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+						variant="primary"
+						size="sm"
+						loading={isSaving}
 					>
-						<Save class="w-4 h-4" />
-						<span>{isSaving ? 'Saving...' : 'Save'}</span>
-					</button>
+						<Save class="w-4 h-4 mr-2" />
+						{isSaving ? 'Saving...' : 'Save'}
+					</Button>
 				</div>
 			</div>
 
@@ -165,14 +169,14 @@
 
 								<!-- Type -->
 								<td class="px-4 py-3">
-									<button
+									<Button
 										on:click={() => toggleVariableType(index)}
-										class="px-3 py-1.5 text-xs font-medium rounded-full border transition-colors {variable.type === 'secret' 
-											? 'bg-red-900/20 border-red-800 text-red-400 hover:bg-red-900/30' 
-											: 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'}"
+										variant={variable.type === 'secret' ? 'danger' : 'ghost'}
+										size="xs"
+										class="!rounded-full {variable.type === 'secret' ? '!bg-red-900/20 !border-red-800 !text-red-400 hover:!bg-red-900/30' : ''}"
 									>
 										{variable.type}
-									</button>
+									</Button>
 								</td>
 
 								<!-- Initial value -->
@@ -186,12 +190,14 @@
 												placeholder="Initial value"
 												class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pr-8"
 											/>
-											<button
+											<IconButton
 												type="button"
-												class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+												variant="ghost"
+												size="xs"
+												class="!absolute !right-2 !top-1/2 !transform !-translate-y-1/2"
 											>
 												<EyeOff class="w-4 h-4" />
-											</button>
+											</IconButton>
 										{:else}
 											<input
 												type="text"
@@ -215,12 +221,14 @@
 												placeholder="Current value"
 												class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pr-8"
 											/>
-											<button
+											<IconButton
 												type="button"
-												class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+												variant="ghost"
+												size="xs"
+												class="!absolute !right-2 !top-1/2 !transform !-translate-y-1/2"
 											>
 												<EyeOff class="w-4 h-4" />
-											</button>
+											</IconButton>
 										{:else}
 											<input
 												type="text"
@@ -235,13 +243,15 @@
 
 								<!-- Delete button -->
 								<td class="px-4 py-3">
-									<button
+									<IconButton
 										on:click={() => removeVariable(index)}
-										class="p-1 text-gray-400 hover:text-red-400 transition-colors"
+										variant="ghost"
+										size="xs"
 										title="Remove variable"
+										class="!text-gray-400 hover:!text-red-400"
 									>
 										<Trash2 class="w-4 h-4" />
-									</button>
+									</IconButton>
 								</td>
 							</tr>
 						{/each}
@@ -249,13 +259,15 @@
 						<!-- Add new variable row -->
 						<tr class="border-b border-gray-800">
 							<td colspan="6" class="px-4 py-3">
-								<button
+								<Button
 									on:click={addNewVariable}
-									class="flex items-center space-x-2 text-sm text-gray-400 hover:text-white transition-colors"
+									variant="ghost"
+									size="sm"
+									class="!justify-start !text-gray-400 hover:!text-white"
 								>
-									<Plus class="w-4 h-4" />
-									<span>Add new variable</span>
-								</button>
+									<Plus class="w-4 h-4 mr-2" />
+									Add new variable
+								</Button>
 							</td>
 						</tr>
 					</tbody>

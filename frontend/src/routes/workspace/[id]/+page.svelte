@@ -19,6 +19,9 @@
 	import WebhooksSidebar from '$lib/components/workspace/WebhooksSidebar.svelte';
 	import WebhookManager from '$lib/components/workspace/WebhookManager.svelte';
 	import CreateWebhookModal from '$lib/components/workspace/CreateWebhookModal.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { Archive, Globe, Link, X } from 'lucide-svelte';
 
 	let workspaceId = '';
 	let isAuthenticated = false;
@@ -950,39 +953,39 @@
 					<div class="py-4 space-y-3">
 						<!-- Collections Icon -->
 						<div class="flex flex-col items-center px-1">
-							<button 
+							<IconButton
+								variant="ghost"
+								size="md"
 								on:click={() => handleSwitchTab({ detail: 'collections' })}
-								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors text-gray-400 hover:bg-gray-700 hover:text-white"
+								class="mb-1.5 text-gray-400 hover:bg-gray-700 hover:text-white"
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-								</svg>
-							</button>
+								<Archive class="w-5 h-5" />
+							</IconButton>
 							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-gray-500">Collections</span>
 						</div>
 						
 						<!-- Environments Icon -->
 						<div class="flex flex-col items-center px-1">
-							<button 
-								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors bg-blue-600 text-white hover:bg-blue-500"
+							<IconButton
+								variant="primary"
+								size="md"
+								class="mb-1.5 bg-blue-600 text-white hover:bg-blue-500"
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9"></path>
-								</svg>
-							</button>
+								<Globe class="w-5 h-5" />
+							</IconButton>
 							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-blue-400">Environments</span>
 						</div>
 						
 						<!-- Webhooks Icon -->
 						<div class="flex flex-col items-center px-1">
-							<button 
+							<IconButton
+								variant="ghost"
+								size="md"
 								on:click={() => handleSwitchTab({ detail: 'webhooks' })}
-								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors text-gray-400 hover:bg-gray-700 hover:text-white"
+								class="mb-1.5 text-gray-400 hover:bg-gray-700 hover:text-white"
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-								</svg>
-							</button>
+								<Link class="w-5 h-5" />
+							</IconButton>
 							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-gray-500">Webhooks</span>
 						</div>
 					</div>
@@ -1005,39 +1008,39 @@
 					<div class="py-4 space-y-3">
 						<!-- Collections Icon -->
 						<div class="flex flex-col items-center px-1">
-							<button 
+							<IconButton
+								variant="ghost"
+								size="md"
 								on:click={() => handleSwitchTab({ detail: 'collections' })}
-								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors text-gray-400 hover:bg-gray-700 hover:text-white"
+								class="mb-1.5 text-gray-400 hover:bg-gray-700 hover:text-white"
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-								</svg>
-							</button>
+								<Archive class="w-5 h-5" />
+							</IconButton>
 							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-gray-500">Collections</span>
 						</div>
 						
 						<!-- Environments Icon -->
 						<div class="flex flex-col items-center px-1">
-							<button 
+							<IconButton
+								variant="ghost"
+								size="md"
 								on:click={() => handleSwitchTab({ detail: 'environments' })}
-								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors text-gray-400 hover:bg-gray-700 hover:text-white"
+								class="mb-1.5 text-gray-400 hover:bg-gray-700 hover:text-white"
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9"></path>
-								</svg>
-							</button>
+								<Globe class="w-5 h-5" />
+							</IconButton>
 							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-gray-500">Environments</span>
 						</div>
 						
 						<!-- Webhooks Icon -->
 						<div class="flex flex-col items-center px-1">
-							<button 
-								class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors bg-purple-600 text-white hover:bg-purple-500"
+							<IconButton
+								variant="primary"
+								size="md"
+								class="mb-1.5 bg-purple-600 text-white hover:bg-purple-500"
 							>
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-								</svg>
-							</button>
+								<Link class="w-5 h-5" />
+							</IconButton>
 							<span class="text-[9px] font-medium text-center leading-tight px-0.5 text-purple-400">Webhooks</span>
 						</div>
 					</div>
@@ -1281,14 +1284,14 @@
 				<p class="text-sm text-red-200">{error}</p>
 			</div>
 			<div class="ml-auto pl-3">
-				<button
+				<IconButton
+					variant="ghost"
+					size="xs"
 					on:click={() => error = ''}
 					class="text-red-400 hover:text-red-300"
 				>
-					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-					</svg>
-				</button>
+					<X class="h-4 w-4" />
+				</IconButton>
 			</div>
 		</div>
 	</div>

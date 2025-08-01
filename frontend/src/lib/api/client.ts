@@ -242,6 +242,32 @@ class ApiClient {
 		return response.data;
 	}
 
+	// Projects
+	async getProjects() {
+		const response = await this.client.get('/projects');
+		return response.data;
+	}
+
+	async createProject(projectData: any) {
+		const response = await this.client.post('/projects', projectData);
+		return response.data;
+	}
+
+	async getProject(projectId: string) {
+		const response = await this.client.get(`/projects/${projectId}`);
+		return response.data;
+	}
+
+	async updateProject(projectId: string, projectData: any) {
+		const response = await this.client.put(`/projects/${projectId}`, projectData);
+		return response.data;
+	}
+
+	async deleteProject(projectId: string) {
+		const response = await this.client.delete(`/projects/${projectId}`);
+		return response.data;
+	}
+
 	// Webhook endpoints
 	async getWebhooks(workspaceId: string, page = 1, limit = 10) {
 		const response = await this.client.get(`/workspace-webhooks/${workspaceId}?page=${page}&limit=${limit}`);

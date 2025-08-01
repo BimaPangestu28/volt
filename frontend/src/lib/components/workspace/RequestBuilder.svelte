@@ -2,6 +2,9 @@
 	import { createEventDispatcher } from 'svelte';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import JsonEditor from '$lib/components/JsonEditor.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { X, Plus, MoreVertical, Eye, EyeOff } from 'lucide-svelte';
 
 	export let selectedRequest: any = null;
 	export let requestName = 'New Request';
@@ -201,8 +204,10 @@
 				<!-- Visible Tabs -->
 				{#each visibleTabs as tab (tab.id)}
 					<div class="flex items-center border-r border-gray-700 last:border-r-0 min-w-0">
-						<button
-							class="flex items-center px-4 py-3 text-xs hover:bg-gray-700 transition-colors min-w-0 max-w-64 {
+						<Button
+							variant="ghost"
+							size="sm"
+							class="flex items-center px-4 py-3 text-xs hover:bg-gray-700 transition-colors min-w-0 max-w-64 rounded-none {
 								activeTabId === tab.id ? 'bg-gray-750 text-white border-b-2 border-blue-500' : 'text-gray-300'
 							}"
 							on:click={() => onSwitchTab(tab.id)}
@@ -227,26 +232,27 @@
 							{#if tab.isUnsaved}
 								<div class="w-2 h-2 rounded-full bg-orange-500 ml-2 flex-shrink-0"></div>
 							{/if}
-						</button>
+						</Button>
 						
 						<!-- Close button -->
-						<button
-							class="px-2 py-3 text-gray-400 hover:text-white hover:bg-red-600 transition-colors flex-shrink-0"
-							on:click|stopPropagation={() => onCloseTab(tab.id)}
+						<IconButton
+							size="sm"
+							class="px-2 py-3 text-gray-400 hover:text-white hover:bg-red-600 transition-colors flex-shrink-0 rounded-none"
+							on:click={(e) => { e.stopPropagation(); onCloseTab(tab.id); }}
 							title="Close tab"
 						>
-							<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-							</svg>
-						</button>
+							<X class="w-3 h-3" />
+						</IconButton>
 					</div>
 				{/each}
 				
 				<!-- Hidden Tabs Dropdown -->
 				{#if hiddenTabs.length > 0}
 					<div class="relative tab-dropdown">
-						<button
-							class="flex items-center px-3 py-3 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors border-r border-gray-700"
+						<Button
+							variant="ghost"
+							size="sm"
+							class="flex items-center px-3 py-3 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors border-r border-gray-700 rounded-none"
 							on:click={() => showDropdown = !showDropdown}
 							title="{hiddenTabs.length} more tabs"
 						>
@@ -254,7 +260,7 @@
 							<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
 							</svg>
-						</button>
+						</Button>
 						
 						<!-- Dropdown Menu -->
 						{#if showDropdown}
@@ -265,8 +271,10 @@
 							>
 								{#each hiddenTabs as tab (tab.id)}
 									<div class="flex items-center hover:bg-gray-700 border-b border-gray-700/50 last:border-b-0">
-										<button
-											class="flex items-center px-3 py-2 text-xs text-gray-300 hover:text-white transition-colors flex-1 min-w-0"
+										<Button
+											variant="ghost"
+											size="sm"
+											class="flex items-center px-3 py-2 text-xs text-gray-300 hover:text-white transition-colors flex-1 min-w-0 rounded-none justify-start"
 											on:click={() => {
 												onSwitchTab(tab.id);
 												showDropdown = false;
@@ -292,18 +300,17 @@
 											{#if tab.isUnsaved}
 												<div class="w-1.5 h-1.5 rounded-full bg-orange-500 ml-2 flex-shrink-0"></div>
 											{/if}
-										</button>
+										</Button>
 										
 										<!-- Close button -->
-										<button
-											class="px-2 py-2 text-gray-400 hover:text-white hover:bg-red-600 transition-colors flex-shrink-0"
-											on:click|stopPropagation={() => onCloseTab(tab.id)}
+										<IconButton
+											size="sm"
+											class="px-2 py-2 text-gray-400 hover:text-white hover:bg-red-600 transition-colors flex-shrink-0 rounded-none"
+											on:click={(e) => { e.stopPropagation(); onCloseTab(tab.id); }}
 											title="Close tab"
 										>
-											<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-											</svg>
-										</button>
+											<X class="w-3 h-3" />
+										</IconButton>
 									</div>
 								{/each}
 							</div>
@@ -313,15 +320,14 @@
 			</div>
 			
 			<!-- Add New Tab Button -->
-			<button
+			<IconButton
+				size="md"
+				class="px-3 py-3 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors flex-shrink-0 border-l border-gray-700 rounded-none"
 				on:click={onCreateTab}
-				class="px-3 py-3 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors flex-shrink-0 border-l border-gray-700"
 				title="New request tab"
 			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-				</svg>
-			</button>
+				<Plus class="w-4 h-4" />
+			</IconButton>
 		</div>
 	{/if}
 
@@ -351,31 +357,34 @@
 						class="flex-1 px-4 py-2.5 border border-gray-600 rounded text-xs bg-gray-700 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
 					/>
 					
-					<button
-						on:click={handleExecuteRequest}
+					<Button
+						variant="primary"
+						size="sm"
 						disabled={isExecuting}
+						loading={isExecuting}
 						class="electric-gradient text-white px-6 py-2.5 text-xs font-semibold rounded hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center min-w-[60px] justify-center"
+						on:click={handleExecuteRequest}
 					>
-						{#if isExecuting}
-							<LoadingSpinner size="sm" color="white" />
-						{:else}
-							Send
-						{/if}
-					</button>
+						{#if !isExecuting}Send{/if}
+					</Button>
 					
 					<div class="flex items-center space-x-2">
-						<button
-							on:click={handleSaveRequest}
+						<Button
+							variant="secondary"
+							size="sm"
 							class="px-4 py-2.5 text-xs font-medium text-gray-300 border border-gray-600 rounded hover:bg-gray-700 hover:text-white transition-colors"
+							on:click={handleSaveRequest}
 						>
 							Save
-						</button>
+						</Button>
 						
-						<button class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors" title="More options">
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-							</svg>
-						</button>
+						<IconButton
+							size="sm"
+							class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+							title="More options"
+						>
+							<MoreVertical class="w-4 h-4" />
+						</IconButton>
 					</div>
 				</div>
 			</div>
@@ -384,18 +393,18 @@
 			<div class="bg-gray-800 border-b border-gray-700">
 				<nav class="flex" aria-label="Tabs">
 					{#each ['Params', 'Authorization', 'Headers (8)', 'Body', 'Scripts', 'Settings'] as tab}
-						<button 
+						<Button
+							variant="ghost"
+							size="sm"
+							class="px-3 py-2 text-xs font-normal border-b-2 transition-colors rounded-none {
+								activeTab === tab.split(' ')[0] 
+									? 'border-blue-500 text-blue-400' 
+									: 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500'
+							}"
 							on:click={() => activeTab = tab.split(' ')[0]}
-							class="px-3 py-2 text-xs font-normal border-b-2 transition-colors"
-							class:border-blue-500={activeTab === tab.split(' ')[0]}
-							class:text-blue-400={activeTab === tab.split(' ')[0]}
-							class:border-transparent={activeTab !== tab.split(' ')[0]}
-							class:text-gray-400={activeTab !== tab.split(' ')[0]}
-							class:hover:text-gray-200={activeTab !== tab.split(' ')[0]}
-							class:hover:border-gray-500={activeTab !== tab.split(' ')[0]}
 						>
 							{tab}
-						</button>
+						</Button>
 					{/each}
 				</nav>
 			</div>
@@ -408,7 +417,7 @@
 						<div class="flex items-center justify-between">
 							<h3 class="text-xs font-medium text-gray-300">Query Params</h3>
 							<div class="flex items-center space-x-2">
-								<button class="text-[10px] text-gray-400 hover:text-gray-200 font-medium">⋯ Bulk Edit</button>
+								<Button variant="ghost" size="xs" class="text-[10px] text-gray-400 hover:text-gray-200 font-medium">⋯ Bulk Edit</Button>
 							</div>
 						</div>
 						
@@ -464,14 +473,15 @@
 						<div class="space-y-3">
 							<label class="block text-xs font-medium text-gray-300">Authorization Type</label>
 							<div class="grid grid-cols-2 gap-3">
-								<button
-									type="button"
-									on:click={() => authType = 'none'}
-									class="p-3 border rounded-lg text-left transition-all hover:bg-gray-700/50 {
+								<Button
+									variant="ghost"
+									size="sm"
+									class="p-3 border rounded-lg text-left transition-all hover:bg-gray-700/50 justify-start w-full {
 										authType === 'none' 
 											? 'border-blue-500 bg-blue-500/10 text-white' 
 											: 'border-gray-600 bg-gray-800/50 text-gray-300'
 									}"
+									on:click={() => authType = 'none'}
 								>
 									<div class="flex items-center justify-between mb-1">
 										<span class="text-xs font-medium">No Auth</span>
@@ -482,16 +492,17 @@
 										{/if}
 									</div>
 									<p class="text-[10px] text-gray-500">No authentication required</p>
-								</button>
+								</Button>
 
-								<button
-									type="button"
+								<Button
+									variant="ghost"
+									size="sm"
 									on:click={() => authType = 'bearer'}
 									class="p-3 border rounded-lg text-left transition-all hover:bg-gray-700/50 {
 										authType === 'bearer' 
 											? 'border-blue-500 bg-blue-500/10 text-white' 
 											: 'border-gray-600 bg-gray-800/50 text-gray-300'
-									}"
+									} justify-start w-full"
 								>
 									<div class="flex items-center justify-between mb-1">
 										<span class="text-xs font-medium">Bearer Token</span>
@@ -502,16 +513,17 @@
 										{/if}
 									</div>
 									<p class="text-[10px] text-gray-500">JWT or API token</p>
-								</button>
+								</Button>
 
-								<button
-									type="button"
+								<Button
+									variant="ghost"
+									size="sm"
 									on:click={() => authType = 'basic'}
 									class="p-3 border rounded-lg text-left transition-all hover:bg-gray-700/50 {
 										authType === 'basic' 
 											? 'border-blue-500 bg-blue-500/10 text-white' 
 											: 'border-gray-600 bg-gray-800/50 text-gray-300'
-									}"
+									} justify-start w-full"
 								>
 									<div class="flex items-center justify-between mb-1">
 										<span class="text-xs font-medium">Basic Auth</span>
@@ -522,16 +534,17 @@
 										{/if}
 									</div>
 									<p class="text-[10px] text-gray-500">Username and password</p>
-								</button>
+								</Button>
 
-								<button
-									type="button"
+								<Button
+									variant="ghost"
+									size="sm"
 									on:click={() => authType = 'apikey'}
 									class="p-3 border rounded-lg text-left transition-all hover:bg-gray-700/50 {
 										authType === 'apikey' 
 											? 'border-blue-500 bg-blue-500/10 text-white' 
 											: 'border-gray-600 bg-gray-800/50 text-gray-300'
-									}"
+									} justify-start w-full"
 								>
 									<div class="flex items-center justify-between mb-1">
 										<span class="text-xs font-medium">API Key</span>
@@ -542,7 +555,7 @@
 										{/if}
 									</div>
 									<p class="text-[10px] text-gray-500">Key-value authentication</p>
-								</button>
+								</Button>
 							</div>
 						</div>
 
@@ -574,23 +587,18 @@
 													class="w-full px-3 py-2.5 pr-10 border border-gray-600 rounded-md text-sm bg-gray-700 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 												/>
 											{/if}
-											<button
-												type="button"
+											<IconButton
+												size="sm"
 												class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200 transition-colors"
 												on:click={() => showAuthToken = !showAuthToken}
 												title={showAuthToken ? "Hide token" : "Show token"}
 											>
 												{#if showAuthToken}
-													<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M14.12 14.12l1.415 1.415M14.12 14.12L9.878 9.878m4.242 4.242L8.464 8.464m5.656 5.656l1.415 1.415"></path>
-													</svg>
+													<EyeOff class="h-4 w-4" />
 												{:else}
-													<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-													</svg>
+													<Eye class="h-4 w-4" />
 												{/if}
-											</button>
+											</IconButton>
 										</div>
 										<div class="bg-blue-500/10 border border-blue-500/20 rounded-md p-3">
 											<div class="flex items-center space-x-2">
@@ -639,23 +647,18 @@
 														class="w-full px-3 py-2.5 pr-10 border border-gray-600 rounded-md text-sm bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 													/>
 												{/if}
-												<button
-													type="button"
+												<IconButton
+													size="sm"
 													class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200 transition-colors"
 													on:click={() => showAuthPassword = !showAuthPassword}
 													title={showAuthPassword ? "Hide password" : "Show password"}
 												>
 													{#if showAuthPassword}
-														<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M14.12 14.12l1.415 1.415M14.12 14.12L9.878 9.878m4.242 4.242L8.464 8.464m5.656 5.656l1.415 1.415"></path>
-														</svg>
+														<EyeOff class="h-4 w-4" />
 													{:else}
-														<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-														</svg>
+														<Eye class="h-4 w-4" />
 													{/if}
-												</button>
+												</IconButton>
 											</div>
 										</div>
 									</div>
@@ -708,15 +711,15 @@
 					<div class="space-y-4">
 						<div class="flex items-center justify-between">
 							<h3 class="text-sm font-medium text-white">Headers</h3>
-							<button
+							<Button
+								variant="ghost"
+								size="xs"
 								on:click={handleAddHeader}
 								class="text-xs text-blue-400 hover:text-blue-300 flex items-center font-medium"
 							>
-								<svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-								</svg>
+								<Plus class="w-3 h-3 mr-1" />
 								Add Header
-							</button>
+							</Button>
 						</div>
 						<div class="space-y-2">
 							{#each requestHeaders as header, index}
@@ -734,14 +737,13 @@
 										placeholder="Header value"
 										class="flex-1 px-3 py-2 border border-gray-600 rounded text-sm bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
 									/>
-									<button
+									<IconButton
+										size="sm"
 										on:click={() => handleRemoveHeader(index)}
 										class="p-2 text-gray-500 hover:text-red-400 rounded"
 									>
-										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-										</svg>
-									</button>
+										<X class="w-4 h-4" />
+									</IconButton>
 								</div>
 							{/each}
 							{#if requestHeaders.length === 0}
@@ -822,7 +824,9 @@
 											<div class="flex items-center justify-between">
 												<span class="text-xs text-gray-400">JSON Editor</span>
 												<div class="flex items-center space-x-2">
-													<button
+													<Button
+														variant="ghost"
+														size="xs"
 														class="text-xs text-blue-400 hover:text-blue-300 font-medium"
 														on:click={() => {
 															// Format JSON
@@ -835,15 +839,17 @@
 														}}
 													>
 														Format
-													</button>
-													<button
+													</Button>
+													<Button
+														variant="ghost"
+														size="xs"
 														class="text-xs text-gray-400 hover:text-gray-300 font-medium"
 														on:click={() => {
 															requestBody = '{\n  "key": "value"\n}';
 														}}
 													>
 														Example
-													</button>
+													</Button>
 												</div>
 											</div>
 											<JsonEditor

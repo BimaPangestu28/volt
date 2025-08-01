@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { X } from 'lucide-svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
 	
 	const dispatch = createEventDispatcher();
 	
@@ -47,13 +49,14 @@
 			<!-- Header -->
 			<div class="flex items-center justify-between p-6 border-b border-gray-700">
 				<h3 class="text-lg font-medium text-white">Create Environment</h3>
-				<button 
+				<IconButton 
 					on:click={handleClose}
-					class="text-gray-400 hover:text-white transition-colors"
+					variant="ghost"
+					size="sm"
 					disabled={isCreating}
 				>
-					<X class="w-5 h-5" />
-				</button>
+					<X class="w-4 h-4" />
+				</IconButton>
 			</div>
 			
 			<!-- Content -->
@@ -85,20 +88,23 @@
 			
 			<!-- Footer -->
 			<div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-700">
-				<button 
+				<Button 
 					on:click={handleClose}
-					class="px-4 py-2 text-gray-300 hover:text-white transition-colors"
+					variant="ghost"
+					size="sm"
 					disabled={isCreating}
 				>
 					Cancel
-				</button>
-				<button 
+				</Button>
+				<Button 
 					on:click={handleSubmit}
 					disabled={!environmentName.trim() || isCreating}
-					class="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+					variant="primary"
+					size="sm"
+					loading={isCreating}
 				>
 					{isCreating ? 'Creating...' : 'Create Environment'}
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>

@@ -5,6 +5,9 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import JsonEditor from '$lib/components/JsonEditor.svelte';
 	import WebhookInspector from './WebhookInspector.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { Copy, X, Trash2, Zap, RefreshCw } from 'lucide-svelte';
 
 	export let webhook: any = null;
 	export let isLoading = false;
@@ -278,22 +281,21 @@
 						<span class="px-2 py-1 rounded-full text-xs font-medium {getStatusColor(webhook.status)}">
 							{webhook.status}
 						</span>
-						<button
+						<Button
 							on:click={toggleWebhookStatus}
-							class="px-3 py-1.5 text-xs font-medium rounded {
-								webhook.status === 'active' 
-									? 'bg-red-600 hover:bg-red-700 text-white' 
-									: 'bg-green-600 hover:bg-green-700 text-white'
-							} transition-colors"
+							variant={webhook.status === 'active' ? 'danger' : 'primary'}
+							size="xs"
+							class={webhook.status === 'active' ? '' : '!bg-green-600 hover:!bg-green-700'}
 						>
 							{webhook.status === 'active' ? 'Deactivate' : 'Activate'}
-						</button>
-						<button
+						</Button>
+						<Button
 							on:click={deleteWebhook}
-							class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
+							variant="danger"
+							size="xs"
 						>
 							Delete
-						</button>
+						</Button>
 					</div>
 				</div>
 
@@ -325,19 +327,17 @@
 						{ id: 'test', name: 'Test', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
 						{ id: 'config', name: 'Configuration', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' }
 					] as tab}
-						<button
+						<Button
 							on:click={() => activeTab = tab.id}
-							class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors {
-								activeTab === tab.id 
-									? 'bg-purple-600 text-white' 
-									: 'text-gray-300 hover:text-white hover:bg-gray-700'
-							}"
+							variant={activeTab === tab.id ? 'primary' : 'ghost'}
+							size="sm"
+							class={activeTab === tab.id ? '!bg-purple-600 hover:!bg-purple-700' : '!text-gray-300 hover:!text-white hover:!bg-gray-700'}
 						>
 							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={tab.icon}></path>
 							</svg>
 							{tab.name}
-						</button>
+						</Button>
 					{/each}
 				</nav>
 			</div>
@@ -364,12 +364,15 @@
 								readonly
 								class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white font-mono"
 							/>
-							<button
+							<Button
 								on:click={copyWebhookUrl}
-								class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded transition-colors"
+								variant="primary"
+								size="sm"
+								class="!bg-purple-600 hover:!bg-purple-700"
 							>
+								<Copy class="w-4 h-4 mr-1" />
 								Copy
-							</button>
+							</Button>
 						</div>
 						<p class="text-xs text-gray-400 mt-2">Send HTTP requests to this URL to test your webhook</p>
 					</div>
@@ -452,12 +455,14 @@
 						<div class="mb-6">
 							<div class="flex items-center justify-between mb-2">
 								<label class="block text-sm font-medium text-gray-300">Headers</label>
-								<button
+								<Button
 									on:click={addTestHeader}
-									class="text-xs text-purple-400 hover:text-purple-300"
+									variant="ghost"
+									size="xs"
+									class="!text-purple-400 hover:!text-purple-300"
 								>
 									Add Header
-								</button>
+								</Button>
 							</div>
 							<div class="space-y-2">
 								{#each testHeaders as header, index}
@@ -474,14 +479,14 @@
 											placeholder="Header value"
 											class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white"
 										/>
-										<button
+										<IconButton
 											on:click={() => removeTestHeader(index)}
-											class="px-2 py-2 text-red-400 hover:text-red-300"
+											variant="ghost"
+											size="sm"
+											class="!text-red-400 hover:!text-red-300"
 										>
-											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-											</svg>
-										</button>
+											<Trash2 class="w-4 h-4" />
+										</IconButton>
 									</div>
 								{/each}
 							</div>
@@ -491,12 +496,14 @@
 						<div class="mb-6">
 							<div class="flex items-center justify-between mb-2">
 								<label class="block text-sm font-medium text-gray-300">Query Parameters</label>
-								<button
+								<Button
 									on:click={addTestQuery}
-									class="text-xs text-purple-400 hover:text-purple-300"
+									variant="ghost"
+									size="xs"
+									class="!text-purple-400 hover:!text-purple-300"
 								>
 									Add Parameter
-								</button>
+								</Button>
 							</div>
 							<div class="space-y-2">
 								{#each testQuery as param, index}
@@ -513,14 +520,14 @@
 											placeholder="Parameter value"
 											class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white"
 										/>
-										<button
+										<IconButton
 											on:click={() => removeTestQuery(index)}
-											class="px-2 py-2 text-red-400 hover:text-red-300"
+											variant="ghost"
+											size="sm"
+											class="!text-red-400 hover:!text-red-300"
 										>
-											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-											</svg>
-										</button>
+											<Trash2 class="w-4 h-4" />
+										</IconButton>
 									</div>
 								{/each}
 							</div>
@@ -539,21 +546,21 @@
 						{/if}
 
 						<!-- Test Button -->
-						<button
+						<Button
 							on:click={testWebhook}
 							disabled={isTesting}
-							class="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-medium rounded transition-colors flex items-center justify-center"
+							variant="primary"
+							size="md"
+							loading={isTesting}
+							class="w-full !bg-purple-600 hover:!bg-purple-700"
 						>
 							{#if isTesting}
-								<LoadingSpinner size="sm" color="white" />
-								<span class="ml-2">Testing...</span>
+								Testing...
 							{:else}
-								<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-								</svg>
+								<Zap class="w-5 h-5 mr-2" />
 								Test Webhook
 							{/if}
-						</button>
+						</Button>
 					</div>
 
 					<!-- Test Response -->
@@ -613,12 +620,15 @@
 				<div class="space-y-4">
 					<div class="flex items-center justify-between">
 						<h3 class="text-lg font-medium text-white">Request History</h3>
-						<button
+						<Button
 							on:click={() => { requestsPage = 1; loadWebhookRequests(); }}
-							class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded transition-colors"
+							variant="primary"
+							size="sm"
+							class="!bg-purple-600 hover:!bg-purple-700"
 						>
+							<RefreshCw class="w-4 h-4 mr-1" />
 							Refresh
-						</button>
+						</Button>
 					</div>
 
 					{#if requestsLoading && webhookRequests.length === 0}
@@ -686,17 +696,19 @@
 							{/each}
 
 							{#if hasMoreRequests}
-								<button
+								<Button
 									on:click={loadMoreRequests}
 									disabled={requestsLoading}
-									class="w-full py-2 text-purple-400 hover:text-purple-300 text-sm font-medium"
+									variant="ghost"
+									size="sm"
+									class="w-full !text-purple-400 hover:!text-purple-300"
 								>
 									{#if requestsLoading}
 										Loading more...
 									{:else}
 										Load More Requests
 									{/if}
-								</button>
+								</Button>
 							{/if}
 						</div>
 					{/if}
@@ -708,12 +720,14 @@
 					<div class="bg-gray-800 rounded-lg p-4">
 						<div class="flex items-center justify-between mb-4">
 							<h3 class="text-lg font-medium text-white">Webhook Configuration</h3>
-							<button
+							<Button
 								on:click={editWebhookConfig}
-								class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded transition-colors"
+								variant="primary"
+								size="sm"
+								class="!bg-purple-600 hover:!bg-purple-700"
 							>
 								Edit Configuration
-							</button>
+							</Button>
 						</div>
 
 						<div class="bg-gray-900 rounded p-4 font-mono text-sm">
@@ -762,14 +776,13 @@
 		<div class="bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
 			<div class="flex items-center justify-between mb-4">
 				<h3 class="text-lg font-medium text-white">Edit Configuration</h3>
-				<button
+				<IconButton
 					on:click={() => showConfigEditor = false}
-					class="text-gray-400 hover:text-white"
+					variant="ghost"
+					size="sm"
 				>
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-					</svg>
-				</button>
+					<X class="w-5 h-5" />
+				</IconButton>
 			</div>
 
 			<JsonEditor
@@ -779,18 +792,21 @@
 			/>
 
 			<div class="flex justify-end space-x-2 mt-4">
-				<button
+				<Button
 					on:click={() => showConfigEditor = false}
-					class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+					variant="ghost"
+					size="sm"
 				>
 					Cancel
-				</button>
-				<button
+				</Button>
+				<Button
 					on:click={saveWebhookConfig}
-					class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors"
+					variant="primary"
+					size="sm"
+					class="!bg-purple-600 hover:!bg-purple-700"
 				>
 					Save Configuration
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>

@@ -2,6 +2,9 @@
 	import { createEventDispatcher } from 'svelte';
 	import { apiClient } from '$lib/api/client';
 	import { toastStore } from '$lib/stores/toast';
+	import Button from '$lib/components/ui/Button.svelte';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { X, Copy, Link, Check, RefreshCw } from 'lucide-svelte';
 
 	export let show = false;
 	export let workspaceId = '';
@@ -91,14 +94,13 @@
 				<h3 class="text-lg font-semibold text-white">
 					{showLinkResult ? 'Invitation Link Generated' : 'Generate Invitation Link'}
 				</h3>
-				<button
+				<IconButton
 					on:click={close}
-					class="text-gray-400 hover:text-white transition-colors"
+					variant="ghost"
+					size="sm"
 				>
-					<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-					</svg>
-				</button>
+					<X class="w-5 h-5" />
+				</IconButton>
 			</div>
 
 			<!-- Body -->
@@ -170,15 +172,14 @@
 									readonly
 									class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
-								<button
+								<Button
 									on:click={copyToClipboard}
-									class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors flex items-center space-x-1"
+									variant="primary"
+									size="sm"
 								>
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-									</svg>
-									<span>Copy</span>
-								</button>
+									<Copy class="w-4 h-4 mr-1" />
+									Copy
+								</Button>
 							</div>
 						</div>
 
@@ -206,46 +207,46 @@
 			<!-- Footer -->
 			<div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-700">
 				{#if !showLinkResult}
-					<button
+					<Button
 						on:click={close}
-						class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+						variant="ghost"
+						size="sm"
 						disabled={isGenerating}
 					>
 						Cancel
-					</button>
-					<button
+					</Button>
+					<Button
 						on:click={generateInviteLink}
-						class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:opacity-50 rounded-md transition-colors flex items-center space-x-2"
+						variant="primary"
+						size="sm"
+						loading={isGenerating}
 						disabled={isGenerating}
 					>
 						{#if isGenerating}
-							<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-							</svg>
-							<span>Generating...</span>
+							<RefreshCw class="w-4 h-4 mr-1" />
+							Generating...
 						{:else}
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-							</svg>
-							<span>Generate Link</span>
+							<Link class="w-4 h-4 mr-1" />
+							Generate Link
 						{/if}
-					</button>
+					</Button>
 				{:else}
-					<button
+					<Button
 						on:click={generateNewLink}
-						class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+						variant="ghost"
+						size="sm"
 					>
 						Generate New Link
-					</button>
-					<button
+					</Button>
+					<Button
 						on:click={close}
-						class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors flex items-center space-x-2"
+						variant="primary"
+						size="sm"
+						class="!bg-green-600 hover:!bg-green-700"
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-						</svg>
-						<span>Done</span>
-					</button>
+						<Check class="w-4 h-4 mr-1" />
+						Done
+					</Button>
 				{/if}
 			</div>
 		</div>

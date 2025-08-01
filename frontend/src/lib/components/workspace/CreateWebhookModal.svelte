@@ -2,6 +2,9 @@
 	import { createEventDispatcher } from 'svelte';
 	import { toastStore } from '$lib/stores/toast';
 	import JsonEditor from '$lib/components/JsonEditor.svelte';
+	import Button from '../ui/Button.svelte';
+	import IconButton from '../ui/IconButton.svelte';
+	import { X, Plus, Trash } from 'lucide-svelte';
 
 	export let show = false;
 	export let isCreating = false;
@@ -151,11 +154,13 @@
 						</svg>
 						Create New Webhook
 					</h2>
-					<button on:click={close} class="text-gray-400 hover:text-white transition-colors">
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-						</svg>
-					</button>
+					<IconButton
+						size="sm"
+						class="text-gray-400 hover:text-white transition-colors"
+						on:click={close}
+					>
+						<X class="w-5 h-5" />
+					</IconButton>
 				</div>
 			</div>
 
@@ -225,30 +230,38 @@
 					<div class="flex items-center justify-between">
 						<h3 class="text-base font-medium text-white">Response Configuration</h3>
 						<div class="flex space-x-2">
-							<button
-								on:click={() => setDefaultResponse('success')}
+							<Button
+								variant="secondary"
+								size="xs"
 								class="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+								on:click={() => setDefaultResponse('success')}
 							>
 								Success
-							</button>
-							<button
-								on:click={() => setDefaultResponse('echo')}
+							</Button>
+							<Button
+								variant="secondary"
+								size="xs"
 								class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+								on:click={() => setDefaultResponse('echo')}
 							>
 								Echo
-							</button>
-							<button
-								on:click={() => setDefaultResponse('error')}
+							</Button>
+							<Button
+								variant="secondary"
+								size="xs"
 								class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+								on:click={() => setDefaultResponse('error')}
 							>
 								Error
-							</button>
-							<button
-								on:click={() => setDefaultResponse('empty')}
+							</Button>
+							<Button
+								variant="secondary"
+								size="xs"
 								class="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+								on:click={() => setDefaultResponse('empty')}
 							>
 								Empty
-							</button>
+							</Button>
 						</div>
 					</div>
 
@@ -295,12 +308,14 @@
 					<div>
 						<div class="flex items-center justify-between mb-2">
 							<label class="block text-sm font-medium text-gray-300">Response Headers</label>
-							<button
-								on:click={addResponseHeader}
+							<Button
+								variant="ghost"
+								size="xs"
 								class="text-xs text-purple-400 hover:text-purple-300"
+								on:click={addResponseHeader}
 							>
 								Add Header
-							</button>
+							</Button>
 						</div>
 						<div class="space-y-2">
 							{#each responseHeaders as header, index}
@@ -317,14 +332,13 @@
 										placeholder="Header value"
 										class="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
 									/>
-									<button
-										on:click={() => removeResponseHeader(index)}
+									<IconButton
+										size="sm"
 										class="px-2 py-2 text-red-400 hover:text-red-300"
+										on:click={() => removeResponseHeader(index)}
 									>
-										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-										</svg>
-									</button>
+										<Trash class="w-4 h-4" />
+									</IconButton>
 								</div>
 							{/each}
 						</div>
@@ -426,27 +440,23 @@
 			<!-- Footer -->
 			<div class="sticky bottom-0 bg-gray-800 border-t border-gray-700 p-6 rounded-b-lg">
 				<div class="flex items-center justify-end space-x-3">
-					<button
+					<Button
 						on:click={close}
-						class="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors"
+						variant="ghost"
+						size="sm"
 					>
 						Cancel
-					</button>
-					<button
+					</Button>
+					<Button
 						on:click={createWebhook}
 						disabled={isCreating || !webhookName.trim() || selectedMethods.length === 0}
-						class="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition-colors flex items-center"
+						variant="primary"
+						size="sm"
+						loading={isCreating}
+						class="!bg-purple-600 hover:!bg-purple-700"
 					>
-						{#if isCreating}
-							<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-							</svg>
-							Creating...
-						{:else}
-							Create Webhook
-						{/if}
-					</button>
+						{isCreating ? 'Creating...' : 'Create Webhook'}
+					</Button>
 				</div>
 			</div>
 		</div>

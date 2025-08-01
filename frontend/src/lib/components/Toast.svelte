@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import IconButton from './ui/IconButton.svelte';
 	
 	export let type: 'success' | 'error' | 'info' = 'info';
 	export let message: string = '';
@@ -70,15 +71,19 @@
 			</div>
 			
 			<!-- Close button -->
-			<button
-				on:click={hide}
-				class="flex-shrink-0 ml-3 text-gray-400 hover:text-white transition-colors p-1 rounded-md hover:bg-gray-700/50"
-				title="Close"
-			>
-				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-				</svg>
-			</button>
+			<div class="flex-shrink-0 ml-3">
+				<IconButton
+					variant="ghost"
+					size="sm"
+					on:click={hide}
+					class="text-gray-400 hover:text-white hover:bg-gray-700/50"
+					title="Close"
+				>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+					</svg>
+				</IconButton>
+			</div>
 		</div>
 		
 		<!-- Progress bar -->

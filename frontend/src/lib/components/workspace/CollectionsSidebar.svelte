@@ -4,6 +4,9 @@
 	import { toastStore } from '$lib/stores/toast';
 	import { apiClient } from '$lib/api/client';
 	import RenameCollectionModal from './RenameCollectionModal.svelte';
+	import IconButton from '../ui/IconButton.svelte';
+	import Button from '../ui/Button.svelte';
+	import { ChevronRight, Star, MoreVertical, Edit, Copy, Trash, Plus, Download, X, Zap, Clock } from 'lucide-svelte';
 
 	export let collections: Collection[] = [];
 	export let selectedCollection: Collection | null = null;
@@ -189,64 +192,74 @@
 		<div class="py-4 space-y-3">
 			<!-- Collections Icon -->
 			<div class="flex flex-col items-center px-1">
-				<button 
-					on:click={() => dispatch('switchTab', 'collections')}
-					class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors {activeTab === 'collections' 
+				<IconButton
+					variant="{activeTab === 'collections' ? 'default' : 'ghost'}"
+					size="md"
+					class="w-10 h-10 mb-1.5 {activeTab === 'collections' 
 						? 'bg-blue-600 text-white hover:bg-blue-500' 
 						: 'text-gray-400 hover:bg-gray-700 hover:text-white'}"
+					on:click={() => dispatch('switchTab', 'collections')}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
 					</svg>
-				</button>
+				</IconButton>
 				<span class="text-[9px] font-medium text-center leading-tight px-0.5 {activeTab === 'collections' ? 'text-blue-400' : 'text-gray-500'}">Collections</span>
 			</div>
 			
 			<!-- Environments Icon -->
 			<div class="flex flex-col items-center px-1">
-				<button 
-					on:click={() => dispatch('switchTab', 'environments')}
-					class="w-10 h-10 flex items-center justify-center rounded-md mb-1.5 transition-colors {activeTab === 'environments' 
+				<IconButton
+					variant="{activeTab === 'environments' ? 'default' : 'ghost'}"
+					size="md"
+					class="w-10 h-10 mb-1.5 {activeTab === 'environments' 
 						? 'bg-blue-600 text-white hover:bg-blue-500' 
 						: 'text-gray-400 hover:bg-gray-700 hover:text-white'}"
+					on:click={() => dispatch('switchTab', 'environments')}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9"></path>
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 0 1 9-9"></path>
 					</svg>
-				</button>
+				</IconButton>
 				<span class="text-[9px] font-medium text-center leading-tight px-0.5 {activeTab === 'environments' ? 'text-blue-400' : 'text-gray-500'}">Environments</span>
 			</div>
 			
 			<!-- Webhooks Icon -->
 			<div class="flex flex-col items-center px-1">
-				<button 
+				<IconButton
+					variant="ghost"
+					size="md"
+					class="w-10 h-10 mb-1.5 text-gray-400 hover:bg-gray-700 hover:text-white"
 					on:click={() => dispatch('switchTab', 'webhooks')}
-					class="w-10 h-10 flex items-center justify-center rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors mb-1.5"
 				>
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-					</svg>
-				</button>
+					<Zap class="w-5 h-5" />
+				</IconButton>
 				<span class="text-[9px] text-gray-500 font-medium text-center leading-tight px-0.5">Webhooks</span>
 			</div>
 			
 			<!-- Flows Icon -->
 			<div class="flex flex-col items-center px-1">
-				<button class="w-10 h-10 flex items-center justify-center rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors mb-1.5">
+				<IconButton
+					variant="ghost"
+					size="md"
+					class="w-10 h-10 mb-1.5 text-gray-400 hover:bg-gray-700 hover:text-white"
+				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
 					</svg>
-				</button>
+				</IconButton>
 				<span class="text-[9px] text-gray-500 font-medium text-center leading-tight px-0.5">Flows</span>
 			</div>
 			
 			<!-- History Icon -->
 			<div class="flex flex-col items-center px-1">
-				<button class="w-10 h-10 flex items-center justify-center rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors mb-1.5">
-					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-					</svg>
-				</button>
+				<IconButton
+					variant="ghost"
+					size="md"
+					class="w-10 h-10 mb-1.5 text-gray-400 hover:bg-gray-700 hover:text-white"
+				>
+					<Clock class="w-5 h-5" />
+				</IconButton>
 				<span class="text-[9px] text-gray-500 font-medium text-center leading-tight px-0.5">History</span>
 			</div>
 		</div>
@@ -260,31 +273,31 @@
 				<div class="flex items-center justify-between mb-4">
 					<h2 class="text-lg font-semibold text-white">Collections</h2>
 				<div class="flex items-center space-x-1">
-					<button
-						class="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+					<IconButton
+						variant="ghost"
+						size="sm"
+						class="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700"
 						title="Import"
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
-						</svg>
-					</button>
-					<button
-						on:click={handleCreateCollection}
-						class="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+						<Download class="w-4 h-4" />
+					</IconButton>
+					<IconButton
+						variant="ghost"
+						size="sm"
+						class="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700"
 						title="New Collection"
+						on:click={handleCreateCollection}
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-						</svg>
-					</button>
-					<button
-						class="p-1.5 rounded text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+						<Plus class="w-4 h-4" />
+					</IconButton>
+					<IconButton
+						variant="ghost"
+						size="sm"
+						class="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700"
 						title="More actions"
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-						</svg>
-					</button>
+						<MoreVertical class="w-4 h-4" />
+					</IconButton>
 				</div>
 			</div>
 			
@@ -300,14 +313,14 @@
 					class="w-full pl-10 pr-8 py-2.5 bg-gray-700 border border-gray-600 rounded-lg text-xs text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 				/>
 				{#if searchQuery}
-					<button
+					<IconButton
+						variant="ghost"
+						size="xs"
+						class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
 						on:click={clearSearch}
-						class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-						</svg>
-					</button>
+						<X class="w-4 h-4" />
+					</IconButton>
 				{/if}
 			</div>
 		</div>
@@ -330,12 +343,14 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
 					</svg>
 					<p class="text-xs text-gray-400 mb-4">No collections yet</p>
-					<button
-						on:click={handleCreateCollection}
+					<Button
+						variant="ghost"
+						size="xs"
 						class="text-xs text-blue-400 hover:text-blue-300 font-medium"
+						on:click={handleCreateCollection}
 					>
 						Create your first collection
-					</button>
+					</Button>
 				</div>
 			{:else if searchQuery && filteredCollections.length === 0}
 				<div class="text-center py-8 px-4">
@@ -350,14 +365,13 @@
 						<div class="group border-b border-gray-700/50 last:border-b-0">
 							<!-- Collection Header -->
 							<div class="flex items-center px-4 py-3 hover:bg-gray-750 cursor-pointer transition-colors">
-								<button
+								<IconButton
+									size="sm"
 									class="mr-3 p-1 rounded text-gray-400 hover:text-white transition-colors"
 									on:click={() => handleSelectCollection(collection)}
 								>
-									<svg class="w-3 h-3 transform {selectedCollection?.id === collection.id ? 'rotate-90' : ''} transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-									</svg>
-								</button>
+									<ChevronRight class="w-3 h-3 transform {selectedCollection?.id === collection.id ? 'rotate-90' : ''} transition-transform" />
+								</IconButton>
 								
 								<div 
 									class="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer"
@@ -381,26 +395,24 @@
 								
 								<div class="flex items-center space-x-1 transition-opacity {collection.is_favorited || showOptionsMenu === collection.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}">
 									<!-- Star/Favorite -->
-									<button 
-										class="p-1 rounded transition-colors {collection.is_favorited ? 'text-yellow-400 hover:text-yellow-300' : 'text-gray-400 hover:text-yellow-400'}" 
+									<IconButton
+										size="sm"
+										class="p-1 rounded transition-colors {collection.is_favorited ? 'text-yellow-400 hover:text-yellow-300' : 'text-gray-400 hover:text-yellow-400'}"
 										title="{collection.is_favorited ? 'Remove from favorites' : 'Add to favorites'}"
 										on:click={(e) => handleToggleFavorite(collection, e)}
 									>
-										<svg class="w-3.5 h-3.5" fill="{collection.is_favorited ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-										</svg>
-									</button>
+										<Star class="w-3.5 h-3.5" fill="{collection.is_favorited ? 'currentColor' : 'none'}" />
+									</IconButton>
 									<!-- More Options -->
 									<div class="relative options-menu">
-										<button 
-											class="p-1 rounded text-gray-400 hover:text-white transition-colors" 
+										<IconButton
+											size="sm"
+											class="p-1 rounded text-gray-400 hover:text-white transition-colors"
 											title="More actions"
 											on:click={(e) => handleCollectionOptions(collection, e)}
 										>
-											<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-											</svg>
-										</button>
+											<MoreVertical class="w-3.5 h-3.5" />
+										</IconButton>
 										
 										<!-- Options Dropdown -->
 										{#if showOptionsMenu === collection.id}
@@ -409,34 +421,34 @@
 												class="absolute top-full right-0 z-50 bg-gray-800 border border-gray-600 rounded-md shadow-xl min-w-[160px] py-1"
 												on:click|stopPropagation
 											>
-												<button
-													class="w-full px-3 py-2 text-left text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center"
+												<Button
+													variant="ghost"
+													size="xs"
+													class="w-full px-3 py-2 text-left text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center justify-start"
 													on:click={() => handleRenameCollection(collection)}
 												>
-													<svg class="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-													</svg>
+													<Edit class="w-3.5 h-3.5 mr-2" />
 													Rename
-												</button>
-												<button
-													class="w-full px-3 py-2 text-left text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center"
+												</Button>
+												<Button
+													variant="ghost"
+													size="xs"
+													class="w-full px-3 py-2 text-left text-xs text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center justify-start"
 													on:click={() => handleDuplicateCollection(collection)}
 												>
-													<svg class="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-													</svg>
+													<Copy class="w-3.5 h-3.5 mr-2" />
 													Duplicate
-												</button>
+												</Button>
 												<div class="border-t border-gray-700 my-1"></div>
-												<button
-													class="w-full px-3 py-2 text-left text-xs text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors flex items-center"
+												<Button
+													variant="ghost"
+													size="xs"
+													class="w-full px-3 py-2 text-left text-xs text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors flex items-center justify-start"
 													on:click={() => handleDeleteCollection(collection)}
 												>
-													<svg class="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-													</svg>
+													<Trash class="w-3.5 h-3.5 mr-2" />
 													Delete
-												</button>
+												</Button>
 											</div>
 										{/if}
 									</div>
@@ -468,15 +480,15 @@
 									{/each}
 									
 									<!-- Add New Request -->
-									<button
+									<Button
+										variant="ghost"
+										size="xs"
+										class="flex items-center px-4 py-2 pl-12 hover:bg-gray-700/50 cursor-pointer transition-colors w-full text-left group justify-start"
 										on:click={handleNewRequest}
-										class="flex items-center px-4 py-2 pl-12 hover:bg-gray-700/50 cursor-pointer transition-colors w-full text-left group"
 									>
-										<svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-400 mr-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-										</svg>
+										<Plus class="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-400 mr-2 transition-colors" />
 										<span class="text-[11px] text-gray-400 group-hover:text-blue-400 transition-colors">Add request</span>
-									</button>
+									</Button>
 								</div>
 							{/if}
 						</div>

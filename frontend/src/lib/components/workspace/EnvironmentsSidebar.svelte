@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { Search, Plus, MoreHorizontal, Copy, Trash2, Edit } from 'lucide-svelte';
+	import IconButton from '../ui/IconButton.svelte';
+	import Button from '../ui/Button.svelte';
 	
 	const dispatch = createEventDispatcher();
 
@@ -66,13 +68,15 @@
 	<div class="p-4 border-b border-gray-700">
 		<div class="flex items-center justify-between mb-3">
 			<h2 class="text-sm font-medium text-white">Environments</h2>
-			<button
+			<IconButton
 				on:click={createNewEnvironment}
-				class="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
+				variant="ghost"
+				size="sm"
+				class="text-gray-400 hover:text-white hover:bg-gray-800"
 				title="Create new environment"
 			>
 				<Plus class="w-4 h-4" />
-			</button>
+			</IconButton>
 		</div>
 
 		<!-- Search -->
@@ -120,41 +124,49 @@
 
 						<!-- Options Menu -->
 						<div class="options-menu relative opacity-0 group-hover:opacity-100 transition-opacity">
-							<button
+							<IconButton
 								on:click={(e) => toggleOptionsMenu(environment.id, e)}
-								class="p-1.5 {selectedEnvironment?.id === environment.id 
+								variant="ghost"
+								size="sm"
+								class="{selectedEnvironment?.id === environment.id 
 									? 'text-blue-100 hover:text-white hover:bg-blue-700' 
-									: 'text-gray-400 hover:text-white hover:bg-gray-700'} rounded transition-colors"
+									: 'text-gray-400 hover:text-white hover:bg-gray-700'}"
 								title="Environment options"
 							>
 								<MoreHorizontal class="w-4 h-4" />
-							</button>
+							</IconButton>
 
 							{#if showOptionsMenu[environment.id]}
 								<div class="absolute right-0 top-full mt-1 w-40 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10">
 									<div class="py-1">
-										<button
+										<Button
 											on:click={(e) => handleRename(environment, e)}
-											class="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+											variant="ghost"
+											size="sm"
+											class="flex items-center space-x-2 w-full justify-start px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-none"
 										>
 											<Edit class="w-3.5 h-3.5" />
 											<span>Rename</span>
-										</button>
-										<button
+										</Button>
+										<Button
 											on:click={(e) => handleDuplicate(environment, e)}
-											class="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+											variant="ghost"
+											size="sm"
+											class="flex items-center space-x-2 w-full justify-start px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-none"
 										>
 											<Copy class="w-3.5 h-3.5" />
 											<span>Duplicate</span>
-										</button>
+										</Button>
 										<hr class="border-gray-700 my-1" />
-										<button
+										<Button
 											on:click={(e) => handleDelete(environment, e)}
-											class="flex items-center space-x-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300"
+											variant="ghost"
+											size="sm"
+											class="flex items-center space-x-2 w-full justify-start px-3 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 rounded-none"
 										>
 											<Trash2 class="w-3.5 h-3.5" />
 											<span>Delete</span>
-										</button>
+										</Button>
 									</div>
 								</div>
 							{/if}
